@@ -1,3 +1,4 @@
+
 import type { NavItem } from '@/components/dashboard/SidebarNav';
 import { PlaySquare, ListChecks, LineChart, Server, DownloadCloud } from 'lucide-react';
 
@@ -32,12 +33,12 @@ export const SIMULATION_PARAMETERS_DEFAULTS = {
   location: '/path/to/files',
   priority: -1,
   maxTime: -1, // in seconds or some unit backend expects
-  simulationType: 'MD' as 'MD' | 'MC', // Changed from MD: true
+  simulationType: 'MD' as 'MD' | 'MC',
   gpu: false,
   steps: 10000000,
   confInterval: 100000,
   dt: 0.003,
-  interactionType: 0,
+  interactionType: 0, // Default to DNA2
   hBondRestraint: true,
   step1: 0.0,
   step2: 0.0,
@@ -49,3 +50,15 @@ export const SIMULATION_PARAMETERS_DEFAULTS = {
   override: '',
   jobId: '',
 };
+
+export const INTERACTION_TYPE_OPTIONS = [
+  { label: 'DNA2', value: 0 },
+  { label: 'RNA2', value: 1 },
+  { label: 'Lorenzo Patchy', value: 2 },
+  { label: 'Romano Patchy', value: 3 },
+  { label: 'My Patchy', value: 4 },
+  { label: 'PHB', value: 5 },
+  { label: 'PSP', value: 6 },
+  { label: 'Umbrella Sampling', value: 7 },
+  { label: 'Forward Flux', value: 8 },
+];

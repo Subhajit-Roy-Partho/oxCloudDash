@@ -1,6 +1,7 @@
 
 "use client";
 
+import React, { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
 import * as z from 'zod';
@@ -17,10 +18,17 @@ import {
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
-import { SIMULATION_PARAMETERS_DEFAULTS } from '@/lib/constants';
+import { SIMULATION_PARAMETERS_DEFAULTS, INTERACTION_TYPE_OPTIONS } from '@/lib/constants';
 import type { SimulationJobPayload } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Send } from 'lucide-react';
@@ -38,7 +46,7 @@ const formSchema = z.object({
   steps: z.coerce.number().positive("Steps must be a positive number."),
   confInterval: z.coerce.number().positive("Configuration interval must be positive."),
   dt: z.coerce.number().positive("dt must be positive."),
-  interactionType: z.coerce.number().int().min(0), // Assuming 0, 1, 2 are valid
+  interactionType: z.coerce.number().int().min(0),
   hBondRestraint: z.boolean(),
   T: z.string().min(1, "Temperature is required."),
   saltConc: z.coerce.number().min(0, "Salt concentration cannot be negative."),
@@ -58,6 +66,14 @@ export default function SimulationForm() {
     resolver: zodResolver(formSchema),
     defaultValues: SIMULATION_PARAMETERS_DEFAULTS,
   });
+
+  const simulationType = form.watch('simulationType');
+
+  useEffect(() => {
+    if (simulationType === 'MC') {
+      form.setValue('gpu', false);
+    }
+  }, [simulationType, form.setValue]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
@@ -181,9 +197,9 @@ export default function SimulationForm() {
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                     <div className="space-y-0.5">
                       <FormLabel>Use GPU</FormLabel>
-                      <FormDescription>Utilize GPU for simulation if available.</FormDescription>
+                      <FormDescription>Utilize GPU for simulation if available. (Disabled for MC)</FormDescription>
                     </div>
-                    <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                    <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} disabled={simulationType === 'MC'} /></FormControl>
                   </FormItem>
                 )} />
               </CardContent>
@@ -204,9 +220,34 @@ export default function SimulationForm() {
                 <FormField control={form.control} name="dt" render={({ field }) => (
                   <FormItem><FormLabel>Timestep (dt)</FormLabel><FormControl><Input type="number" step="0.0001" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
-                <FormField control={form.control} name="interactionType" render={({ field }) => (
-                  <FormItem><FormLabel>Interaction Type</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormDescription>e.g., 0 for oxDNA, 1 for oxDNA2</FormDescription><FormMessage /></FormItem>
-                )} />
+                <FormField
+                  control={form.control}
+                  name="interactionType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Interaction Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={String(field.value)}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select interaction type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {INTERACTION_TYPE_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={String(option.value)}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>Choose the interaction model for the simulation.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                  <FormField control={form.control} name="hBondRestraint" render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                     <div className="space-y-0.5">
