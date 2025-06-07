@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
@@ -32,7 +33,7 @@ const formSchema = z.object({
   location: z.string().min(1, "Location/path to files is required."),
   priority: z.coerce.number().int(),
   maxTime: z.coerce.number().int(),
-  MD: z.boolean(),
+  simulationType: z.enum(['MD', 'MC'], { required_error: "You must select a simulation type."}),
   gpu: z.boolean(),
   steps: z.coerce.number().positive("Steps must be a positive number."),
   confInterval: z.coerce.number().positive("Configuration interval must be positive."),
@@ -141,15 +142,41 @@ export default function SimulationForm() {
             <Card>
               <CardHeader><CardTitle className="font-headline text-lg">Execution Settings</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <FormField control={form.control} name="MD" render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                    <div className="space-y-0.5">
-                      <FormLabel>Molecular Dynamics (MD)</FormLabel>
-                      <FormDescription>Enable MD simulation.</FormDescription>
-                    </div>
-                    <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                  </FormItem>
-                )} />
+                <FormField
+                  control={form.control}
+                  name="simulationType"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>Simulation Type</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex flex-col space-y-1"
+                        >
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="MD" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              Molecular Dynamics (MD)
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="MC" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              Monte Carlo (MC)
+                            </FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormDescription>Choose the type of simulation to run.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField control={form.control} name="gpu" render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                     <div className="space-y-0.5">

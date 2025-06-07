@@ -12,7 +12,7 @@ export interface SimulationJobPayload {
   jobId?: string; // Optional, backend can generate
   priority: number;
   maxTime: number;
-  MD: boolean;
+  simulationType: 'MD' | 'MC'; // Changed from MD: boolean
   gpu: boolean;
   steps: number;
   confInterval: number;

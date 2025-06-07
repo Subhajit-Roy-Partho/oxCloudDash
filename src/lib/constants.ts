@@ -32,7 +32,7 @@ export const SIMULATION_PARAMETERS_DEFAULTS = {
   location: '/path/to/files',
   priority: -1,
   maxTime: -1, // in seconds or some unit backend expects
-  MD: true,
+  simulationType: 'MD' as 'MD' | 'MC', // Changed from MD: true
   gpu: false,
   steps: 10000000,
   confInterval: 100000,
