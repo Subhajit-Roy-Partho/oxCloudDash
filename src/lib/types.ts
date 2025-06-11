@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   username: string;
@@ -48,6 +49,7 @@ export interface ServerResource {
   GPUavail: string;
   TotalRam: string; // From C++ code this is TotalRam
   RAMavail: string;
+  totalCPU: string; // Added to store total CPU cores
 }
 
 // API response types
@@ -73,7 +75,9 @@ export interface GetResourcesResponse {
   [key: string]: {
     CPUavail: string;
     GPUavail: string;
-    RAMtotal: string; // Matches C++ code
+    totalRAM: string; // Changed from RAMtotal to match prompt example
     RAMavail: string;
+    totalCPU: string; // Added to match prompt example
   };
 }
+

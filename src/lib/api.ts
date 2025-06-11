@@ -1,3 +1,4 @@
+
 import {
   API_BASE_URL_INTERNAL,
   API_BASE_URL_PUBLIC,
@@ -94,11 +95,14 @@ export const api = {
   getServerResources: async (): Promise<ServerResource[]> => {
     const response = await fetchAPI<GetResourcesResponse>('/getResources', { method: 'GET' });
     // Transform into ServerResource[]
-    return Object.entries(response).map(([id, res], index) => ({
-      id: id, // or generate one: `server-${index + 1}`
-      name: `Server ${index + 1}`, // Or get name if API provides it
-      ...res,
-      TotalRam: res.RAMtotal, // Align with ServerResource type
+    return Object.entries(response).map(([id, resData], index) => ({
+      id: id, 
+      name: `Server ${index + 1}`, 
+      CPUavail: resData.CPUavail,
+      GPUavail: resData.GPUavail,
+      TotalRam: resData.totalRAM, // Map from backend's totalRAM
+      RAMavail: resData.RAMavail,
+      totalCPU: resData.totalCPU, // Include totalCPU
     }));
   },
 
@@ -123,3 +127,4 @@ export const api = {
     return response.blob();
   },
 };
+

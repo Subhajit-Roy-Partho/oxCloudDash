@@ -24,9 +24,9 @@ type SortConfig = {
 };
 
 // Helper to parse resource strings like "X/Y" into percentage
-const parseResourceToPercentage = (avail: string, totalKey?: keyof ServerResource, totalVal?: string): number => {
+const parseResourceToPercentage = (avail: string, totalVal?: string): number => {
   if (!avail) return 0;
-  // If avail is like "X/Y" e.g. "8/16" for CPU
+  // If avail is like "X/Y" e.g. "8/16" for CPU (This mode is less likely for CPU with new totalCPU field)
   if (avail.includes('/')) {
     const parts = avail.split('/');
     if (parts.length === 2) {
@@ -35,13 +35,13 @@ const parseResourceToPercentage = (avail: string, totalKey?: keyof ServerResourc
       return total > 0 ? (available / total) * 100 : 0;
     }
   }
-  // If avail is just a number and total is provided separately
-  if (totalKey && totalVal) {
+  // If avail is just a number and total is provided separately (Used for RAM)
+  if (totalVal) {
       const available = parseFloat(avail);
       const total = parseFloat(totalVal);
       return total > 0 ? (available / total) * 100 : 0;
   }
-  // If it's a direct percentage or cannot parse
+  // If it's a direct percentage or cannot parse (Fallback, less likely to be used with specific total fields)
   const val = parseFloat(avail);
   return isNaN(val) ? 0 : val;
 };
@@ -96,6 +96,7 @@ export default function ServerStatusTable() {
     return sortableItems.filter(resource =>
       resource.name.toLowerCase().includes(filter.toLowerCase()) ||
       resource.CPUavail.toLowerCase().includes(filter.toLowerCase()) ||
+      (resource.totalCPU && resource.totalCPU.toLowerCase().includes(filter.toLowerCase())) ||
       resource.GPUavail.toLowerCase().includes(filter.toLowerCase()) ||
       resource.RAMavail.toLowerCase().includes(filter.toLowerCase())
     );
@@ -151,17 +152,26 @@ export default function ServerStatusTable() {
           </TableHeader>
           <TableBody>
             {sortedAndFilteredResources.length > 0 ? sortedAndFilteredResources.map((res) => {
-              const cpuUsage = 100 - parseResourceToPercentage(res.CPUavail); // Assuming CPUavail is "Available/Total" or just "Available" percentage
-              const ramUsage = 100 - parseResourceToPercentage(res.RAMavail, 'TotalRam', res.TotalRam);
+              const availableCpu = parseFloat(res.CPUavail);
+              const totalCpu = parseFloat(res.totalCPU);
+              const cpuUsagePercentage = totalCpu > 0 && availableCpu <= totalCpu 
+                ? ((totalCpu - availableCpu) / totalCpu) * 100 
+                : 0;
 
+              const availableRam = parseFloat(res.RAMavail);
+              const totalRam = parseFloat(res.TotalRam); // TotalRam is already mapped from totalRAM
+              const ramUsagePercentage = totalRam > 0 && availableRam <= totalRam
+                ? ((totalRam - availableRam) / totalRam) * 100
+                : 0;
+              
               return (
                 <TableRow key={res.id}>
                   <TableCell className="font-medium">{res.name}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Cpu className="h-5 w-5 text-blue-500" /> 
-                      <span>{res.CPUavail}</span>
-                      <Progress value={cpuUsage} className="w-20 h-2" indicatorClassName={cpuUsage > 80 ? 'bg-destructive' : 'bg-primary'} />
+                      <span>{res.CPUavail} / {res.totalCPU}</span>
+                      <Progress value={cpuUsagePercentage} className="w-20 h-2" indicatorClassName={cpuUsagePercentage > 80 ? 'bg-destructive' : 'bg-primary'} />
                     </div>
                   </TableCell>
                   <TableCell>
@@ -174,7 +184,7 @@ export default function ServerStatusTable() {
                      <div className="flex items-center gap-2">
                       <MemoryStick className="h-5 w-5 text-purple-500" />
                       <span>{res.RAMavail}</span>
-                       <Progress value={ramUsage} className="w-20 h-2" indicatorClassName={ramUsage > 80 ? 'bg-destructive' : 'bg-primary'}/>
+                       <Progress value={ramUsagePercentage} className="w-20 h-2" indicatorClassName={ramUsagePercentage > 80 ? 'bg-destructive' : 'bg-primary'}/>
                     </div>
                   </TableCell>
                   <TableCell>{res.TotalRam}</TableCell>
@@ -193,3 +203,4 @@ export default function ServerStatusTable() {
     </div>
   );
 }
+
