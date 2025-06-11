@@ -18,6 +18,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/internal/:path*',
+        destination: 'http://localhost:8888/:path*', // Proxy to Backend
+      },
+    ];
+  },
 };
 
 export default nextConfig;
