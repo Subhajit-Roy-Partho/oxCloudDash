@@ -29,7 +29,7 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 export const SIMULATION_PARAMETERS_DEFAULTS = {
-  server: 'default_server',
+  server: '', // Made optional, default to empty string
   location: '/path/to/files',
   priority: -1,
   maxTime: -1, // in seconds or some unit backend expects

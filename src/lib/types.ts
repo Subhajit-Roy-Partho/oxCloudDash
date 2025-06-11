@@ -10,7 +10,7 @@ export interface User {
 export interface SimulationJobPayload {
   userID: string; // This will be user.id (which is the username)
   username: string;
-  server: string;
+  server?: string; // Made optional
   location: string;
   jobId?: string; // Optional, backend can generate
   priority: number;
@@ -24,7 +24,7 @@ export interface SimulationJobPayload {
   hBondRestraint: boolean;
   T: string;
   saltConc: number;
-  forceFile: string;
+  forceFile?: string; // Optional
   verletSkin: number;
   step1: number;
   step2: number;
@@ -49,7 +49,7 @@ export interface ServerResource {
   name: string; // Added for clarity, e.g. "Server 1"
   CPUavail: string;
   GPUavail: string;
-  TotalRam: string; // From C++ code this is TotalRam
+  TotalRam: string; // From C++ code this is totalRAM
   RAMavail: string;
   totalCPU: string;
 }
@@ -82,4 +82,3 @@ export interface GetResourcesResponse {
     totalCPU: string;
   };
 }
-

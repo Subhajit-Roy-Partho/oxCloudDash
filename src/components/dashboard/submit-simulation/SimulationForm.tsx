@@ -37,7 +37,7 @@ import { Separator } from '@/components/ui/separator';
 
 const formSchema = z.object({
   jobId: z.string().optional(),
-  server: z.string().min(1, "Server name is required."),
+  server: z.string().optional(), // Made server optional
   location: z.string().min(1, "Location/path to files is required."),
   priority: z.coerce.number().int(),
   maxTime: z.coerce.number().int(),
@@ -83,8 +83,9 @@ export default function SimulationForm() {
 
     const payload: SimulationJobPayload = {
       ...values,
-      userID: user.id, // Ensure this matches the backend expectation
+      userID: user.id, 
       username: user.username,
+      server: values.server || undefined, // Ensure empty string becomes undefined if backend prefers that for optional
     };
 
     try {
@@ -93,7 +94,7 @@ export default function SimulationForm() {
         title: "Simulation Submitted",
         description: `Job started successfully with ID: ${response}.`,
       });
-      form.reset(SIMULATION_PARAMETERS_DEFAULTS); // Reset form after successful submission
+      form.reset(SIMULATION_PARAMETERS_DEFAULTS); 
     } catch (error) {
       console.error("Failed to submit simulation:", error);
       toast({
@@ -123,8 +124,8 @@ export default function SimulationForm() {
                 )} />
                 <FormField control={form.control} name="server" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Server</FormLabel>
-                    <FormControl><Input placeholder="e.g., cluster_node_1" {...field} /></FormControl>
+                    <FormLabel>Server (Optional)</FormLabel>
+                    <FormControl><Input placeholder="e.g., cluster_node_1 or leave blank" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -304,4 +305,3 @@ export default function SimulationForm() {
     </Form>
   );
 }
-
