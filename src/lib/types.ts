@@ -8,7 +8,7 @@ export interface User {
 }
 
 export interface SimulationJobPayload {
-  UserID: string; // This will be user.id (which is the username)
+  userID: string; // This will be user.id (which is the username)
   username: string;
   server: string;
   location: string;

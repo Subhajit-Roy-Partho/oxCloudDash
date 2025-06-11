@@ -83,7 +83,7 @@ export default function SimulationForm() {
 
     const payload: SimulationJobPayload = {
       ...values,
-      UserID: user.id,
+      userID: user.id, // Ensure this matches the backend expectation
       username: user.username,
     };
 
