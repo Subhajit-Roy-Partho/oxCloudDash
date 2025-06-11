@@ -8,7 +8,7 @@ export interface User {
 }
 
 export interface SimulationJobPayload {
-  userID: string; // This will be user.id (which is the username)
+  UserID: string; // This will be user.id (which is the username)
   username: string;
   server: string;
   location: string;
@@ -82,3 +82,4 @@ export interface GetResourcesResponse {
     totalCPU: string;
   };
 }
+

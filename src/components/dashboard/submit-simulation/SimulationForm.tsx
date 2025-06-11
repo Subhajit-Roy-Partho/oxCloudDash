@@ -83,7 +83,7 @@ export default function SimulationForm() {
 
     const payload: SimulationJobPayload = {
       ...values,
-      userID: user.id,
+      UserID: user.id,
       username: user.username,
     };
 
@@ -227,7 +227,7 @@ export default function SimulationForm() {
                     <FormItem>
                       <FormLabel>Interaction Type</FormLabel>
                       <Select
-                        onValueChange={field.onChange}
+                        onValueChange={(value) => field.onChange(Number(value))}
                         defaultValue={String(field.value)}
                       >
                         <FormControl>
@@ -304,3 +304,4 @@ export default function SimulationForm() {
     </Form>
   );
 }
+
