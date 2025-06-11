@@ -15,46 +15,59 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/contexts/AuthContext'; // Assuming registration also logs the user in
+import { useAuth } from '@/contexts/AuthContext';
 import { UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from "@/hooks/use-toast";
 
-// For mock registration, we'll collect User ID and Username.
-// In a real scenario, User ID might be auto-generated or email-based.
 const formSchema = z.object({
-  userId: z.string().min(1, { message: 'User ID is required.' }).max(50, { message: 'User ID must be 50 characters or less.'}),
-  username: z.string().min(3, { message: 'Username must be at least 3 characters.' }).max(50, { message: 'Username must be 50 characters or less.'}),
-  // password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
-  // confirmPassword: z.string(),
+  name: z.string().min(1, { message: 'Name is required.' }).max(100),
+  username: z.string().min(3, { message: 'Username must be at least 3 characters.' }).max(50),
+  instituteName: z.string().min(1, { message: 'Name of the Institute is required.' }).max(100),
+  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
+  confirmPassword: z.string(),
 })
-// .refine((data) => data.password === data.confirmPassword, {
-//   message: "Passwords don't match",
-//   path: ['confirmPassword'],
-// });
+.refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
+});
 
 export default function RegisterForm() {
-  const { login } = useAuth(); // Using login for mock registration simplicity
+  const { register } = useAuth();
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      userId: '',
+      name: '',
       username: '',
-      // password: '',
-      // confirmPassword: '',
+      instituteName: '',
+      password: '',
+      confirmPassword: '',
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Mock registration: simply log the user in with the provided details.
-    // In a real app, this would involve an API call to a registration endpoint.
-    login(values.userId, values.username);
-    toast({
-      title: "Registration Successful",
-      description: `Welcome, ${values.username}! Your account has been created.`,
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const success = await register({
+      name: values.name,
+      username: values.username,
+      instituteName: values.instituteName,
+      passwordLogin: values.password,
     });
+
+    if (success) {
+      toast({
+        title: "Registration Successful",
+        description: `Welcome, ${values.name}! Your account has been created.`,
+      });
+    } else {
+      toast({
+        title: "Registration Failed",
+        description: "This username might already be taken or another error occurred.",
+        variant: "destructive",
+      });
+      form.setError("username", {type: "manual", message: "Username may already be taken."})
+    }
   }
 
   return (
@@ -68,15 +81,15 @@ export default function RegisterForm() {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="userId"
+              name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>User ID</FormLabel>
+                  <FormLabel>Full Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Choose a User ID" {...field} />
+                    <Input placeholder="Enter your full name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -95,7 +108,20 @@ export default function RegisterForm() {
                 </FormItem>
               )}
             />
-            {/* <FormField
+            <FormField
+              control={form.control}
+              name="instituteName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name of the Institute</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter your institute's name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
               control={form.control}
               name="password"
               render={({ field }) => (
@@ -120,9 +146,9 @@ export default function RegisterForm() {
                   <FormMessage />
                 </FormItem>
               )}
-            /> */}
-            <Button type="submit" className="w-full" size="lg">
-              <UserPlus className="mr-2 h-5 w-5" /> Register
+            />
+            <Button type="submit" className="w-full" size="lg" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? 'Registering...' : <><UserPlus className="mr-2 h-5 w-5" /> Register</>}
             </Button>
           </form>
         </Form>

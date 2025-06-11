@@ -21,9 +21,8 @@ import Link from 'next/link';
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  userId: z.string().min(1, { message: 'User ID is required.' }),
   username: z.string().min(1, { message: 'Username is required.' }),
-  // password: z.string().min(1, { message: 'Password is required.' }), // Password not used in current mock
+  password: z.string().min(1, { message: 'Password is required.' }),
 });
 
 export default function LoginForm() {
@@ -33,22 +32,26 @@ export default function LoginForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      userId: '',
       username: '',
-      // password: '',
+      password: '',
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // In a real app, you'd call an API here.
-    // For mock, directly call login from AuthContext.
-    // The C++ backend uses userID, username. No password in startJob.
-    // We'll use userId as the primary identifier for API calls as per C++ backend.
-    login(values.userId, values.username);
-    toast({
-      title: "Login Successful",
-      description: `Welcome back, ${values.username}!`,
-    });
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const success = await login(values.username, values.password);
+    if (success) {
+      toast({
+        title: "Login Successful",
+        description: `Welcome back, ${values.username}!`,
+      });
+    } else {
+      toast({
+        title: "Login Failed",
+        description: "Invalid username or password.",
+        variant: "destructive",
+      });
+      form.setError("password", { type: "manual", message: "Invalid username or password."})
+    }
   }
 
   return (
@@ -65,19 +68,6 @@ export default function LoginForm() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
-              name="userId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>User ID</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter your User ID" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
               name="username"
               render={({ field }) => (
                 <FormItem>
@@ -89,7 +79,7 @@ export default function LoginForm() {
                 </FormItem>
               )}
             />
-            {/* <FormField
+            <FormField
               control={form.control}
               name="password"
               render={({ field }) => (
@@ -101,9 +91,9 @@ export default function LoginForm() {
                   <FormMessage />
                 </FormItem>
               )}
-            /> */}
-            <Button type="submit" className="w-full" size="lg">
-              <LogIn className="mr-2 h-5 w-5" /> Login
+            />
+            <Button type="submit" className="w-full" size="lg" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? 'Logging in...' : <><LogIn className="mr-2 h-5 w-5" /> Login</>}
             </Button>
           </form>
         </Form>

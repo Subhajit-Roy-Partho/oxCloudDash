@@ -11,17 +11,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, UserCircle, LogOut, Sun, Moon } from 'lucide-react'; // Added Sun/Moon for theme toggle
+import { Menu, UserCircle, LogOut, Sun, Moon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { SidebarNav } from './SidebarNav'; // For mobile drawer
-import { useTheme } from 'next-themes'; // Assuming next-themes is or can be installed for theme toggling
+import { SidebarNav } from './SidebarNav'; 
+import { useTheme } from 'next-themes'; 
 import { useEffect, useState } from 'react';
 
-// Placeholder for useTheme if not available
+
 const useThemeFallback = () => {
   const [currentTheme, setCurrentTheme] = useState('light');
   const setTheme = (theme: string) => {
-    // Basic theme toggle, ideally use next-themes
     if (typeof window !== 'undefined') {
       document.documentElement.classList.remove('light', 'dark');
       document.documentElement.classList.add(theme);
@@ -43,7 +42,7 @@ const useThemeFallback = () => {
 export function Header() {
   const { user, logout } = useAuth();
   // const { theme, setTheme } = useTheme(); // Use this if next-themes is installed
-   const { theme, setTheme } = useThemeFallback(); // Fallback if next-themes not present
+  const { theme, setTheme } = useThemeFallback(); // Fallback if next-themes not present
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 shadow-sm">
@@ -84,15 +83,15 @@ export function Header() {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user.username}</p>
+                  <p className="text-sm font-medium leading-none">{user.name}</p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    User ID: {user.id}
+                    Username: {user.username}
+                  </p>
+                   <p className="text-xs leading-none text-muted-foreground">
+                    Institute: {user.instituteName}
                   </p>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {/* Add other items like 'Settings', 'Profile' if needed */}
-              {/* <DropdownMenuItem>Settings</DropdownMenuItem> */}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={logout} className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10">
                 <LogOut className="mr-2 h-4 w-4" />
@@ -105,12 +104,3 @@ export function Header() {
     </header>
   );
 }
-
-// It is recommended to add 'next-themes' to package.json for proper theme handling.
-// If 'next-themes' is not available, the fallback provides basic functionality.
-// Add this to layout.tsx for next-themes:
-// import { ThemeProvider } from "next-themes"
-// <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-//   <AuthProvider>...</AuthProvider>
-// </ThemeProvider>
-

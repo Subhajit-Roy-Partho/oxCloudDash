@@ -1,19 +1,21 @@
 
 export interface User {
-  id: string;
+  id: string; // Will store the username for mock purposes
   username: string;
-  // Add other user-specific fields if needed
+  name: string;
+  instituteName: string;
+  password?: string; // Only for mock localStorage, DO NOT use like this in production
 }
 
 export interface SimulationJobPayload {
-  userID: string;
+  userID: string; // This will be user.id (which is the username)
   username: string;
   server: string;
   location: string;
   jobId?: string; // Optional, backend can generate
   priority: number;
   maxTime: number;
-  simulationType: 'MD' | 'MC'; // Changed from MD: boolean
+  simulationType: 'MD' | 'MC';
   gpu: boolean;
   steps: number;
   confInterval: number;
@@ -49,7 +51,7 @@ export interface ServerResource {
   GPUavail: string;
   TotalRam: string; // From C++ code this is TotalRam
   RAMavail: string;
-  totalCPU: string; // Added to store total CPU cores
+  totalCPU: string;
 }
 
 // API response types
@@ -75,9 +77,8 @@ export interface GetResourcesResponse {
   [key: string]: {
     CPUavail: string;
     GPUavail: string;
-    totalRAM: string; // Changed from RAMtotal to match prompt example
+    totalRAM: string;
     RAMavail: string;
-    totalCPU: string; // Added to match prompt example
+    totalCPU: string;
   };
 }
-
