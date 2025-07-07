@@ -14,7 +14,6 @@ import type {
   GetResourcesResponse,
   JobStatus,
   ServerResource,
-  EnergyData,
 } from './types';
 
 async function fetchAPI<T>(
@@ -128,18 +127,8 @@ export const api = {
     return Object.values(response);
   },
   
-  getEnergyData: async (uuid: string): Promise<EnergyData> => {
-    const response = await fetchAPI<GetEnergyResponse>(`/getEnergy/${uuid}`, { method: 'GET' });
-    const energyValues: EnergyData = [];
-    Object.values(response).forEach(innerObj => {
-      const keys = Object.keys(innerObj).map(Number).sort((a,b) => a-b);
-      if (keys.length >= 2) {
-        energyValues.push([innerObj[keys[0].toString() as keyof typeof innerObj] as number, innerObj[keys[1].toString() as keyof typeof innerObj] as number]);
-      } else if (keys.length === 1 && energyValues.length > 0) {
-        energyValues.push([energyValues.length, innerObj[keys[0].toString() as keyof typeof innerObj] as number]);
-      }
-    });
-    return energyValues.sort((a,b) => a[0] - b[0]);
+  getEnergyData: async (uuid: string): Promise<GetEnergyResponse> => {
+    return fetchAPI<GetEnergyResponse>(`/energy/${uuid}/0/3`, { method: 'GET' });
   },
 
   getServerResources: async (): Promise<ServerResource[]> => {

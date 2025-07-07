@@ -34,7 +34,7 @@ export default function DataAnalysisPage() {
             <LineChartIcon className="h-8 w-8 text-primary" />
             <div>
               <CardTitle className="text-2xl font-headline">Energy Profile</CardTitle>
-              <CardDescription>Visualization of energy data from the simulation.</CardDescription>
+              <CardDescription>Visualization of potential, kinetic, and total energy data from the simulation.</CardDescription>
             </div>
           </div>
         </CardHeader>

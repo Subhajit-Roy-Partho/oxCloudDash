@@ -69,10 +69,6 @@ export interface JobStatus {
   stepsCompleted: string | number;
 }
 
-export type EnergyDataPoint = [number, number]; // [stepOrTime, energyValue]
-export type EnergyData = EnergyDataPoint[];
-
-
 export interface ServerResource {
   id: string; // Added for table key
   name: string; // Added for clarity, e.g. "Server 1"
@@ -95,7 +91,10 @@ export interface GetJobStatusByUserResponse {
 }
 
 export interface GetEnergyResponse {
- [key: string]: { [key: string]: number }; // Represents the 2D array structure
+  time: number[];
+  potential: number[];
+  kinetic: number[];
+  total: number[];
 }
 
 
