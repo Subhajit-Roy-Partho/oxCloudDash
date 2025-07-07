@@ -1,4 +1,5 @@
 
+
 export interface User {
   id: string; // Will store the username for mock purposes
   username: string;
@@ -57,6 +58,28 @@ export interface EnhancedSamplingPayload {
   eqSteps: number;
   meltingTemperature: boolean;
   forceFile?: File;
+}
+
+export interface AnalysisJobPayload {
+    userID: string;
+    jobUuid: string; // The UUID of the job being analyzed
+    jobLocation: string;
+    analysisType: number;
+    cpus?: number;
+
+    // Files
+    topology?: File;
+    configuration?: File;
+    otherFile1?: File;
+    otherFile2?: File;
+
+    // Generic params
+    bool1?: boolean;
+    int1?: number;
+    str1?: string;
+    str2?: string;
+    double1?: number;
+    inlist?: string;
 }
 
 

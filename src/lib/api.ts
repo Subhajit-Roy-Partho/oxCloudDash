@@ -1,4 +1,5 @@
 
+
 import {
   API_BASE_URL_INTERNAL,
   API_BASE_URL_PUBLIC,
@@ -7,6 +8,7 @@ import {
 import type {
   SimulationJobPayload,
   EnhancedSamplingPayload,
+  AnalysisJobPayload,
   StartJobResponse,
   GetJobStatusResponse,
   GetJobStatusByUserResponse,
@@ -99,6 +101,30 @@ export const api = {
         if (!response.ok) {
             const errorBody = await response.text();
             console.error(`API Error (${response.status}) on /runOxdnaUmbrella: ${errorBody}`);
+            throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorBody}`);
+        }
+        return response.text() as unknown as Promise<StartJobResponse>;
+    });
+  },
+  
+  startAnalysisJob: (payload: AnalysisJobPayload): Promise<StartJobResponse> => {
+    const formData = new FormData();
+     (Object.keys(payload) as Array<keyof AnalysisJobPayload>).forEach((key) => {
+      const value = payload[key];
+       if (value instanceof File) {
+        formData.append(key, value, value.name);
+      } else if (value !== undefined && value !== null) {
+        formData.append(key, String(value));
+      }
+     });
+    
+     return fetch(`${API_BASE_URL_INTERNAL}/startAnalysisMultipart`, {
+      method: 'POST',
+      body: formData,
+    }).then(async (response) => {
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error(`API Error (${response.status}) on /startAnalysisMultipart: ${errorBody}`);
             throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorBody}`);
         }
         return response.text() as unknown as Promise<StartJobResponse>;
