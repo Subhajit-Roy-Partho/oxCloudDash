@@ -32,6 +32,34 @@ export interface SimulationJobPayload {
   override?: string;
 }
 
+export interface EnhancedSamplingPayload {
+  userID: string;
+  username: string;
+  jobName?: string;
+  samplingType: 'Umbrella' | 'ForwardFlux';
+  topology: File;
+  configuration: File;
+  testPreEq: boolean;
+  nucleotideIndexes0: string;
+  nucleotideIndexes1: string;
+  xmin: number;
+  xmax: number;
+  steps: number; // production steps
+  smallSystem: boolean;
+  T: string;
+  saltConc: number;
+  nWindows: number;
+  stiff: number;
+  protein: boolean;
+  proteinFile?: File;
+  sequenceDependent: boolean;
+  pullingSteps: number;
+  eqSteps: number;
+  meltingTemperature: boolean;
+  forceFile?: File;
+}
+
+
 export interface JobStatus {
   uuid: string;
   jobName: string;

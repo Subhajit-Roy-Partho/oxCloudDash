@@ -6,6 +6,7 @@ import {
 } from './constants';
 import type {
   SimulationJobPayload,
+  EnhancedSamplingPayload,
   StartJobResponse,
   GetJobStatusResponse,
   GetJobStatusByUserResponse,
@@ -70,6 +71,35 @@ export const api = {
         if (!response.ok) {
             const errorBody = await response.text();
             console.error(`API Error (${response.status}) on /startJobMultipart: ${errorBody}`);
+            throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorBody}`);
+        }
+        return response.text() as unknown as Promise<StartJobResponse>;
+    });
+  },
+
+  runEnhancedSamplingJob: (payload: EnhancedSamplingPayload): Promise<StartJobResponse> => {
+    const formData = new FormData();
+
+    // Convert payload to FormData
+    (Object.keys(payload) as Array<keyof EnhancedSamplingPayload>).forEach((key) => {
+      const value = payload[key];
+      // Skip the samplingType as the backend doesn't seem to use it directly
+      if (key === 'samplingType') return;
+      
+      if (value instanceof File) {
+        formData.append(key, value, value.name);
+      } else if (value !== undefined && value !== null) {
+        formData.append(key, String(value));
+      }
+    });
+
+    return fetch(`${API_BASE_URL_INTERNAL}/runOxdnaUmbrella`, {
+      method: 'POST',
+      body: formData,
+    }).then(async (response) => {
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error(`API Error (${response.status}) on /runOxdnaUmbrella: ${errorBody}`);
             throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorBody}`);
         }
         return response.text() as unknown as Promise<StartJobResponse>;
