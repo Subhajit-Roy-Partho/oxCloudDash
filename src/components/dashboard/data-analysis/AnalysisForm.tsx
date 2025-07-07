@@ -34,8 +34,14 @@ import { Send } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
-// Schema defines all possible fields, UI will conditionally render them
-const formSchema = z.object({
+type FormValues = z.infer<ReturnType<typeof createFormSchema>>;
+
+interface AnalysisFormProps {
+    jobId?: string; // Optional jobId distinguishes between internal and external analysis
+}
+
+// Schema factory to create a schema based on context (internal vs. external)
+const createFormSchema = (isExternal: boolean) => z.object({
   analysisType: z.coerce.number({ required_error: "Please select an analysis type." }),
   topology: z.any().optional(),
   configuration: z.any().optional(),
@@ -48,17 +54,35 @@ const formSchema = z.object({
   double1: z.coerce.number().optional(),
   inlist: z.string().optional(),
   cpus: z.coerce.number().int().positive().optional(),
+}).superRefine((data, ctx) => {
+    // Only perform this validation if an analysis type is selected
+    if (data.analysisType === undefined) return;
+
+    const selectedAnalysis = ANALYSIS_OPTIONS.find(opt => opt.value === data.analysisType);
+    if (selectedAnalysis) {
+      for (const file of selectedAnalysis.files) {
+        // A file is required if the config says so AND it's an external analysis,
+        // or if it's required and is NOT a standard topology/configuration file for internal analysis.
+        const isRequired = file.required && (isExternal || (file.name !== 'topology' && file.name !== 'configuration'));
+        
+        if (isRequired && !(data[file.name] instanceof File)) {
+           ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: [file.name],
+              message: `${file.label} is required.`,
+            });
+        }
+      }
+    }
 });
 
-type FormValues = z.infer<typeof formSchema>;
-
-interface AnalysisFormProps {
-    jobId: string;
-}
 
 export default function AnalysisForm({ jobId }: AnalysisFormProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const isExternal = !jobId;
+
+  const formSchema = useMemo(() => createFormSchema(isExternal), [isExternal]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -76,9 +100,7 @@ export default function AnalysisForm({ jobId }: AnalysisFormProps) {
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: keyof FormValues) => {
     const file = e.target.files?.[0];
-    if (file) {
-      form.setValue(fieldName, file, { shouldValidate: true });
-    }
+    form.setValue(fieldName, file || null, { shouldValidate: true });
   };
 
 
@@ -94,8 +116,6 @@ export default function AnalysisForm({ jobId }: AnalysisFormProps) {
 
     const payload: AnalysisJobPayload = {
       userID: user.id,
-      jobUuid: jobId, // The job we are analyzing
-      jobLocation: jobId, // The location where job files are stored
       analysisType: values.analysisType,
       cpus: values.cpus || 1,
       // Generic params
@@ -105,12 +125,18 @@ export default function AnalysisForm({ jobId }: AnalysisFormProps) {
       str2: values.str2,
       double1: values.double1,
       inlist: values.inlist,
-      // Files
-      topology: values.topology,
-      configuration: values.configuration,
-      otherFile1: values.otherFile1,
-      otherFile2: values.otherFile2,
+      // Files - only include if they are File objects
+      topology: values.topology instanceof File ? values.topology : undefined,
+      configuration: values.configuration instanceof File ? values.configuration : undefined,
+      otherFile1: values.otherFile1 instanceof File ? values.otherFile1 : undefined,
+      otherFile2: values.otherFile2 instanceof File ? values.otherFile2 : undefined,
     };
+    
+    // For internal analysis, provide the job UUID and location
+    if (!isExternal) {
+        payload.jobUuid = jobId;
+        payload.jobLocation = jobId;
+    }
 
     try {
       const response = await api.startAnalysisJob(payload);
@@ -118,7 +144,6 @@ export default function AnalysisForm({ jobId }: AnalysisFormProps) {
         title: "Analysis Job Submitted",
         description: `${selectedAnalysis.label} analysis started with ID: ${response}.`,
       });
-      // Optionally reset parts of the form, but keep analysisType
       form.reset({ ...form.getValues(), str1: '', str2: '', int1: undefined, double1: undefined, bool1: false });
 
     } catch (error) {
@@ -166,21 +191,33 @@ export default function AnalysisForm({ jobId }: AnalysisFormProps) {
                 <CardTitle>Parameters for: {selectedAnalysis.label}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-                {selectedAnalysis.files.map(file => (
-                    <FormField
-                        key={file.name}
-                        control={form.control}
-                        name={file.name}
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>{file.label} {file.required && <span className="text-destructive">*</span>}</FormLabel>
-                                <FormControl><Input type="file" onChange={(e) => handleFileChange(e, file.name)} /></FormControl>
-                                <FormDescription>{file.description}</FormDescription>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                ))}
+                {selectedAnalysis.files.map(file => {
+                    const isServerFile = !isExternal && (file.name === 'topology' || file.name === 'configuration');
+
+                    return(
+                      <FormField
+                          key={file.name}
+                          control={form.control}
+                          name={file.name}
+                          render={({ field }) => (
+                              <FormItem>
+                                  <FormLabel>{file.label} {file.required && !isServerFile && <span className="text-destructive">*</span>}</FormLabel>
+                                  {isServerFile ? (
+                                      <div className="text-sm p-3 bg-muted rounded-md border text-muted-foreground">
+                                          ✓ Using file from the original simulation job.
+                                      </div>
+                                  ) : (
+                                    <>
+                                      <FormControl><Input type="file" onChange={(e) => handleFileChange(e, file.name)} /></FormControl>
+                                      <FormDescription>{file.description}</FormDescription>
+                                      <FormMessage />
+                                    </>
+                                  )}
+                              </FormItem>
+                          )}
+                      />
+                    )
+                })}
 
                 {selectedAnalysis.params.map(param => (
                     <FormField
@@ -198,9 +235,9 @@ export default function AnalysisForm({ jobId }: AnalysisFormProps) {
                                         {param.description && <span className="text-sm text-muted-foreground">{param.description}</span>}
                                     </div>
                                 ) : param.type === 'textarea' ? (
-                                    <FormControl><Textarea placeholder={param.description} {...field} /></FormControl>
+                                    <FormControl><Textarea placeholder={param.description} {...field} value={field.value ?? ''}/></FormControl>
                                 ) : (
-                                    <FormControl><Input type={param.type} placeholder={param.description} {...field} /></FormControl>
+                                    <FormControl><Input type={param.type} placeholder={param.description} {...field} value={field.value ?? ''} /></FormControl>
                                 )}
                                 <FormMessage />
                             </FormItem>

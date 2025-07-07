@@ -62,8 +62,8 @@ export interface EnhancedSamplingPayload {
 
 export interface AnalysisJobPayload {
     userID: string;
-    jobUuid: string; // The UUID of the job being analyzed
-    jobLocation: string;
+    jobUuid?: string; // The UUID of the job being analyzed - optional for external analysis
+    jobLocation?: string; // Optional for external analysis
     analysisType: number;
     cpus?: number;
 
@@ -94,7 +94,7 @@ export interface JobStatus {
 
 export interface ServerResource {
   id: string; // Added for table key
-  name: string; // Added for clarity, e.g. "Server 1"
+  name: string; // Added for clarity, e.g., "Server 1"
   CPUavail: string;
   GPUavail: string;
   TotalRam: string; // From C++ code this is totalRAM
