@@ -1,10 +1,11 @@
 
 "use client";
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { api } from '@/lib/api';
 import type { ServerResource } from '@/lib/types';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -15,7 +16,7 @@ import {
 } from '@/components/ui/table';
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowUpDown, Filter, Cpu, Zap, MemoryStick } from 'lucide-react'; // Zap for GPU, MemoryStick for RAM
+import { ArrowUpDown, Filter, Cpu, Zap, MemoryStick, RefreshCw } from 'lucide-react'; // Zap for GPU, MemoryStick for RAM
 import { Progress } from '@/components/ui/progress';
 
 type SortConfig = {
@@ -54,21 +55,25 @@ export default function ServerStatusTable() {
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'ascending' });
   const { toast } = useToast();
 
-  useEffect(() => {
-    async function fetchResources() {
-      setLoading(true);
-      try {
-        const serverResources = await api.getServerResources();
-        setResources(serverResources);
-      } catch (error) {
-        console.error("Failed to fetch server resources:", error);
-        toast({ title: "Error", description: "Could not fetch server statuses.", variant: "destructive" });
-      } finally {
-        setLoading(false);
+  const fetchResources = useCallback(async (isRefresh = false) => {
+    setLoading(true);
+    try {
+      const serverResources = await api.getServerResources();
+      setResources(serverResources);
+      if (isRefresh) {
+        toast({ title: "Refreshed", description: "Server statuses have been updated." });
       }
+    } catch (error) {
+      console.error("Failed to fetch server resources:", error);
+      toast({ title: "Error", description: "Could not fetch server statuses.", variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
-    fetchResources();
   }, [toast]);
+
+  useEffect(() => {
+    fetchResources();
+  }, [fetchResources]);
 
   const sortedAndFilteredResources = useMemo(() => {
     let sortableItems = [...resources];
@@ -138,6 +143,10 @@ export default function ServerStatusTable() {
           onChange={(e) => setFilter(e.target.value)}
           className="max-w-sm"
         />
+        <Button variant="outline" size="icon" onClick={() => fetchResources(true)}>
+          <RefreshCw className="h-4 w-4" />
+          <span className="sr-only">Refresh</span>
+        </Button>
       </div>
       <div className="rounded-md border overflow-hidden">
         <Table>
