@@ -59,12 +59,29 @@ export default function JobStatusTable() {
     }
     fetchJobs();
   }, [user, toast]);
+  
+  const handleRefreshJob = async (uuid: string) => {
+    try {
+      const updatedJobData = await api.getJobStatus(uuid);
+      setJobs(prevJobs => 
+        prevJobs.map(job => 
+          job.uuid === uuid 
+            ? { ...job, ...updatedJobData }
+            : job
+        )
+      );
+      toast({ title: "Refreshed", description: `Updated status for job ${updatedJobData.jobName || uuid}.` });
+    } catch (error) {
+      console.error("Failed to refresh job status:", error);
+      toast({ title: "Error", description: "Could not refresh job status.", variant: "destructive" });
+    }
+  };
 
   const handleAction = async (action: () => Promise<any>, successMessage: string, jobUuid: string) => {
     try {
       await action();
       toast({ title: "Success", description: successMessage });
-      // Refresh jobs list
+      // Refresh jobs list after an action like delete/stop
       if (user?.id) {
         const updatedJobs = await api.getJobsByUser(user.id);
         setJobs(updatedJobs);
@@ -101,6 +118,7 @@ export default function JobStatusTable() {
     }
     return sortableItems.filter(job =>
       job.uuid.toLowerCase().includes(filter.toLowerCase()) ||
+      (job.jobName && job.jobName.toLowerCase().includes(filter.toLowerCase())) ||
       (typeof job.active === 'string' && job.active.toLowerCase().includes(filter.toLowerCase()))
     );
   }, [jobs, filter, sortConfig]);
@@ -146,7 +164,7 @@ export default function JobStatusTable() {
       <div className="flex items-center gap-2">
         <Filter className="h-5 w-5 text-muted-foreground" />
         <Input
-          placeholder="Filter jobs by UUID or status..."
+          placeholder="Filter jobs by name, UUID or status..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           className="max-w-sm"
@@ -156,6 +174,7 @@ export default function JobStatusTable() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead onClick={() => requestSort('jobName')} className="cursor-pointer">Job Name {getSortIndicator('jobName')}</TableHead>
               <TableHead onClick={() => requestSort('uuid')} className="cursor-pointer">UUID {getSortIndicator('uuid')}</TableHead>
               <TableHead onClick={() => requestSort('active')} className="cursor-pointer">Status {getSortIndicator('active')}</TableHead>
               <TableHead onClick={() => requestSort('progress')} className="cursor-pointer">Progress {getSortIndicator('progress')}</TableHead>
@@ -167,6 +186,7 @@ export default function JobStatusTable() {
           <TableBody>
             {sortedAndFilteredJobs.length > 0 ? sortedAndFilteredJobs.map((job) => (
               <TableRow key={job.uuid}>
+                <TableCell className="font-medium">{job.jobName || 'N/A'}</TableCell>
                 <TableCell className="font-medium truncate max-w-xs font-code">{job.uuid}</TableCell>
                 <TableCell>
                   <Badge variant={getJobBadgeVariant(job.active)}>{String(job.active)}</Badge>
@@ -188,6 +208,12 @@ export default function JobStatusTable() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                       <DropdownMenuItem
+                        onSelect={() => handleRefreshJob(job.uuid)}
+                        className="cursor-pointer"
+                      >
+                        <Repeat className="mr-2 h-4 w-4" /> Refresh
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         onSelect={() => handleAction(() => api.resumeJob(job.uuid), `Job ${job.uuid} resumed.`, job.uuid)}
                         className="cursor-pointer"
@@ -220,7 +246,7 @@ export default function JobStatusTable() {
               </TableRow>
             )) : (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={7} className="h-24 text-center">
                   No jobs found.
                 </TableCell>
               </TableRow>

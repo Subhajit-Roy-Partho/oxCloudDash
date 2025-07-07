@@ -34,6 +34,7 @@ export interface SimulationJobPayload {
 
 export interface JobStatus {
   uuid: string;
+  jobName: string;
   active: string | number; // The C++ code implies it could be string from DB
   runningTime: string | number;
   progress: string | number;
@@ -57,15 +58,12 @@ export interface ServerResource {
 // API response types
 export interface StartJobResponse extends String {} // UUID
 
-export interface GetJobStatusResponse {
-  active: string;
-  runningTime: string;
-  progress: string;
-  stepsCompleted: string;
+export interface GetJobStatusResponse extends JobStatus {
+  userID?: string; // Backend sends this but we might not use it
 }
 
 export interface GetJobStatusByUserResponse {
-  [key: string]: JobStatus; // Jobs indexed by string numbers
+  [key:string]: JobStatus; // Jobs indexed by string numbers
 }
 
 export interface GetEnergyResponse {
