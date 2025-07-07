@@ -25,6 +25,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
@@ -36,9 +42,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Separator } from '@/components/ui/separator';
 
 const formSchema = z.object({
-  jobId: z.string().optional(),
-  server: z.string().optional(), // Made server optional
-  location: z.string().min(1, "Location/path to files is required."),
+  jobName: z.string().optional(),
+  topologyFile: z.string().min(1, "Topology file path is required."),
+  configurationFile: z.string().min(1, "Configuration file path is required."),
   priority: z.coerce.number().int(),
   maxTime: z.coerce.number().int(),
   simulationType: z.enum(['MD', 'MC'], { required_error: "You must select a simulation type."}),
@@ -85,7 +91,6 @@ export default function SimulationForm() {
       ...values,
       userID: user.id, 
       username: user.username,
-      server: values.server || undefined, // Ensure empty string becomes undefined if backend prefers that for optional
     };
 
     try {
@@ -112,32 +117,33 @@ export default function SimulationForm() {
           {/* Column 1 */}
           <div className="space-y-6">
             <Card>
-              <CardHeader><CardTitle className="font-headline text-lg">Job Configuration</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="font-headline text-lg">Job & File Configuration</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <FormField control={form.control} name="jobId" render={({ field }) => (
+                <FormField control={form.control} name="jobName" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Job ID (Optional)</FormLabel>
-                    <FormControl><Input placeholder="Leave blank to auto-generate" {...field} /></FormControl>
-                    <FormDescription>Optionally specify a UUID for the job.</FormDescription>
+                    <FormLabel>Job Name (Optional)</FormLabel>
+                    <FormControl><Input placeholder="Leave blank to auto-generate" {...field} value={field.value ?? ""} /></FormControl>
+                    <FormDescription>Optionally specify a name for the job.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )} />
-                <FormField control={form.control} name="server" render={({ field }) => (
+                <FormField control={form.control} name="topologyFile" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Server (Optional)</FormLabel>
-                    <FormControl><Input placeholder="e.g., cluster_node_1 or leave blank" {...field} /></FormControl>
+                    <FormLabel>Topology File Path</FormLabel>
+                    <FormControl><Input placeholder="/path/to/topology.top" {...field} /></FormControl>
+                    <FormDescription>Path to the topology file.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )} />
-                <FormField control={form.control} name="location" render={({ field }) => (
+                 <FormField control={form.control} name="configurationFile" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>File Location</FormLabel>
-                    <FormControl><Input placeholder="/path/to/input/files" {...field} /></FormControl>
-                    <FormDescription>Path on the server to your input files.</FormDescription>
+                    <FormLabel>Configuration File Path</FormLabel>
+                    <FormControl><Input placeholder="/path/to/configuration.conf" {...field} /></FormControl>
+                    <FormDescription>Path to the configuration file.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )} />
-                 <FormField control={form.control} name="priority" render={({ field }) => (
+                <FormField control={form.control} name="priority" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Priority</FormLabel>
                     <FormControl><Input type="number" {...field} /></FormControl>
@@ -264,32 +270,42 @@ export default function SimulationForm() {
                 <FormField control={form.control} name="saltConc" render={({ field }) => (
                   <FormItem><FormLabel>Salt Concentration (M)</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
-                 <FormField control={form.control} name="verletSkin" render={({ field }) => (
-                  <FormItem><FormLabel>Verlet Skin</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
               </CardContent>
             </Card>
 
-            <Card>
-               <CardHeader><CardTitle className="font-headline text-lg">Advanced Steps & Files</CardTitle></CardHeader>
-               <CardContent className="space-y-4">
-                <FormField control={form.control} name="step1" render={({ field }) => (
-                  <FormItem><FormLabel>Step 1</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="step2" render={({ field }) => (
-                  <FormItem><FormLabel>Step 2</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="step3" render={({ field }) => (
-                  <FormItem><FormLabel>Step 3</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="forceFile" render={({ field }) => (
-                  <FormItem><FormLabel>Force File (Optional)</FormLabel><FormControl><Input placeholder="/path/to/force.dat" {...field} /></FormControl><FormDescription>Path to custom force file.</FormDescription><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="override" render={({ field }) => (
-                  <FormItem><FormLabel>Override Parameters (Optional)</FormLabel><FormControl><Textarea placeholder="key = value pairs, one per line" {...field} /></FormControl><FormDescription>Additional parameters to override defaults.</FormDescription><FormMessage /></FormItem>
-                )} />
-              </CardContent>
-            </Card>
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="item-1">
+                 <Card>
+                    <AccordionTrigger className="p-6">
+                        <CardHeader className="p-0">
+                            <CardTitle className="font-headline text-lg">Advanced Parameters</CardTitle>
+                        </CardHeader>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <CardContent className="space-y-4 pt-0">
+                        <FormField control={form.control} name="forceFile" render={({ field }) => (
+                          <FormItem><FormLabel>Force File Path (Optional)</FormLabel><FormControl><Input placeholder="/path/to/force.dat" {...field} value={field.value ?? ""} /></FormControl><FormDescription>Path to custom force file.</FormDescription><FormMessage /></FormItem>
+                        )} />
+                        <FormField control={form.control} name="verletSkin" render={({ field }) => (
+                          <FormItem><FormLabel>Verlet Skin</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField control={form.control} name="step1" render={({ field }) => (
+                          <FormItem><FormLabel>Step 1</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField control={form.control} name="step2" render={({ field }) => (
+                          <FormItem><FormLabel>Step 2</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField control={form.control} name="step3" render={({ field }) => (
+                          <FormItem><FormLabel>Step 3</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField control={form.control} name="override" render={({ field }) => (
+                          <FormItem><FormLabel>Override Parameters (Optional)</FormLabel><FormControl><Textarea placeholder="key = value pairs, one per line" {...field} value={field.value ?? ""} /></FormControl><FormDescription>Additional parameters to override defaults.</FormDescription><FormMessage /></FormItem>
+                        )} />
+                      </CardContent>
+                    </AccordionContent>
+                 </Card>
+              </AccordionItem>
+            </Accordion>
           </div>
         </div>
         

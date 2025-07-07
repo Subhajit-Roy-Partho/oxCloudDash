@@ -29,8 +29,10 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 export const SIMULATION_PARAMETERS_DEFAULTS = {
-  server: '', // Made optional, default to empty string
-  location: '/path/to/files',
+  jobName: '',
+  topologyFile: '/path/to/topology.top',
+  configurationFile: '/path/to/configuration.conf',
+  forceFile: '',
   priority: -1,
   maxTime: -1, // in seconds or some unit backend expects
   simulationType: 'MD' as 'MD' | 'MC',
@@ -45,10 +47,8 @@ export const SIMULATION_PARAMETERS_DEFAULTS = {
   step3: 0.0,
   T: '20C',
   saltConc: 1.0,
-  forceFile: '',
   verletSkin: 0.4,
   override: '',
-  jobId: '',
 };
 
 export const INTERACTION_TYPE_OPTIONS = [

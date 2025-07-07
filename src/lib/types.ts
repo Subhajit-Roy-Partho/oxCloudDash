@@ -8,11 +8,11 @@ export interface User {
 }
 
 export interface SimulationJobPayload {
-  userID: string; // This will be user.id (which is the username)
+  userID: string;
   username: string;
-  server?: string; // Made optional
-  location: string;
-  jobId?: string; // Optional, backend can generate
+  topologyFile: string;
+  configurationFile: string;
+  jobName?: string; // Optional, backend can generate
   priority: number;
   maxTime: number;
   simulationType: 'MD' | 'MC';
