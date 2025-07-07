@@ -43,8 +43,8 @@ import { Separator } from '@/components/ui/separator';
 
 const formSchema = z.object({
   jobName: z.string().optional(),
-  topologyFile: z.string().min(1, "Topology file path is required."),
-  configurationFile: z.string().min(1, "Configuration file path is required."),
+  topology: z.any().refine((file): file is File => file instanceof File, "Topology file is required."),
+  configuration: z.any().refine((file): file is File => file instanceof File, "Configuration file is required."),
   priority: z.coerce.number().int(),
   maxTime: z.coerce.number().int(),
   simulationType: z.enum(['MD', 'MC'], { required_error: "You must select a simulation type."}),
@@ -56,7 +56,7 @@ const formSchema = z.object({
   hBondRestraint: z.boolean(),
   T: z.string().min(1, "Temperature is required."),
   saltConc: z.coerce.number().min(0, "Salt concentration cannot be negative."),
-  forceFile: z.string().optional(),
+  forceFile: z.any().optional(),
   verletSkin: z.coerce.number().min(0),
   step1: z.coerce.number(),
   step2: z.coerce.number(),
@@ -91,6 +91,9 @@ export default function SimulationForm() {
       ...values,
       userID: user.id, 
       username: user.username,
+      topology: values.topology,
+      configuration: values.configuration,
+      forceFile: values.forceFile instanceof File ? values.forceFile : undefined,
     };
 
     try {
@@ -110,6 +113,13 @@ export default function SimulationForm() {
     }
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: keyof z.infer<typeof formSchema>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      form.setValue(fieldName, file, { shouldValidate: true });
+    }
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -127,19 +137,23 @@ export default function SimulationForm() {
                     <FormMessage />
                   </FormItem>
                 )} />
-                <FormField control={form.control} name="topologyFile" render={({ field }) => (
+                <FormField control={form.control} name="topology" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Topology File Path</FormLabel>
-                    <FormControl><Input placeholder="/path/to/topology.top" {...field} /></FormControl>
-                    <FormDescription>Path to the topology file.</FormDescription>
+                    <FormLabel>Topology File</FormLabel>
+                    <FormControl>
+                      <Input type="file" onChange={(e) => handleFileChange(e, 'topology')} />
+                    </FormControl>
+                     <FormDescription>Upload your topology file (.top).</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )} />
-                 <FormField control={form.control} name="configurationFile" render={({ field }) => (
+                 <FormField control={form.control} name="configuration" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Configuration File Path</FormLabel>
-                    <FormControl><Input placeholder="/path/to/configuration.conf" {...field} /></FormControl>
-                    <FormDescription>Path to the configuration file.</FormDescription>
+                    <FormLabel>Configuration File</FormLabel>
+                    <FormControl>
+                      <Input type="file" onChange={(e) => handleFileChange(e, 'configuration')} />
+                    </FormControl>
+                    <FormDescription>Upload your configuration file (.conf).</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -284,7 +298,14 @@ export default function SimulationForm() {
                     <AccordionContent>
                       <CardContent className="space-y-4 pt-0">
                         <FormField control={form.control} name="forceFile" render={({ field }) => (
-                          <FormItem><FormLabel>Force File Path (Optional)</FormLabel><FormControl><Input placeholder="/path/to/force.dat" {...field} value={field.value ?? ""} /></FormControl><FormDescription>Path to custom force file.</FormDescription><FormMessage /></FormItem>
+                          <FormItem>
+                            <FormLabel>Force File (Optional)</FormLabel>
+                             <FormControl>
+                              <Input type="file" onChange={(e) => handleFileChange(e, 'forceFile')} />
+                            </FormControl>
+                            <FormDescription>Upload a custom force file.</FormDescription>
+                            <FormMessage />
+                          </FormItem>
                         )} />
                         <FormField control={form.control} name="verletSkin" render={({ field }) => (
                           <FormItem><FormLabel>Verlet Skin</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>

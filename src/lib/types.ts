@@ -10,8 +10,8 @@ export interface User {
 export interface SimulationJobPayload {
   userID: string;
   username: string;
-  topologyFile: string;
-  configurationFile: string;
+  topology: File;
+  configuration: File;
   jobName?: string; // Optional, backend can generate
   priority: number;
   maxTime: number;
@@ -24,7 +24,7 @@ export interface SimulationJobPayload {
   hBondRestraint: boolean;
   T: string;
   saltConc: number;
-  forceFile?: string; // Optional
+  forceFile?: File; // Optional
   verletSkin: number;
   step1: number;
   step2: number;
@@ -74,7 +74,7 @@ export interface GetEnergyResponse {
 
 
 export interface GetResourcesResponse {
-  [key: string]: {
+  [key:string]: {
     CPUavail: string;
     GPUavail: string;
     totalRAM: string;

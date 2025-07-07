@@ -30,9 +30,9 @@ export const NAV_ITEMS: NavItem[] = [
 
 export const SIMULATION_PARAMETERS_DEFAULTS = {
   jobName: '',
-  topologyFile: '/path/to/topology.top',
-  configurationFile: '/path/to/configuration.conf',
-  forceFile: '',
+  topology: undefined,
+  configuration: undefined,
+  forceFile: undefined,
   priority: -1,
   maxTime: -1, // in seconds or some unit backend expects
   simulationType: 'MD' as 'MD' | 'MC',

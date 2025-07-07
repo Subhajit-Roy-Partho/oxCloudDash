@@ -35,7 +35,6 @@ async function fetchAPI<T>(
     throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorBody}`);
   }
   
-  // Handle cases where response might be text (like UUID from startJob)
   const contentType = response.headers.get('content-type');
   if (contentType && contentType.includes('application/json')) {
     return response.json() as Promise<T>;
@@ -45,9 +44,35 @@ async function fetchAPI<T>(
 
 export const api = {
   startJob: (payload: SimulationJobPayload): Promise<StartJobResponse> => {
-    return fetchAPI<StartJobResponse>('/startJob', {
+    const formData = new FormData();
+
+    // Convert payload to FormData, handling files and other data types
+    (Object.keys(payload) as Array<keyof SimulationJobPayload>).forEach((key) => {
+      const value = payload[key];
+
+      if (key === 'simulationType') {
+        // Convert simulationType to the 'MD' boolean flag the backend expects
+        formData.append('MD', String(value === 'MD'));
+      } else if (value instanceof File) {
+        // Append file data
+        formData.append(key, value, value.name);
+      } else if (value !== undefined && value !== null) {
+        // Append other fields as strings
+        formData.append(key, String(value));
+      }
+    });
+    
+    // The browser will set the 'Content-Type: multipart/form-data' header automatically
+    return fetch(`${API_BASE_URL_INTERNAL}/startJobMultipart`, {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: formData,
+    }).then(async (response) => {
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error(`API Error (${response.status}) on /startJobMultipart: ${errorBody}`);
+            throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorBody}`);
+        }
+        return response.text() as unknown as Promise<StartJobResponse>;
     });
   },
 
@@ -75,34 +100,28 @@ export const api = {
   
   getEnergyData: async (uuid: string): Promise<EnergyData> => {
     const response = await fetchAPI<GetEnergyResponse>(`/getEnergy/${uuid}`, { method: 'GET' });
-    // Transform GetEnergyResponse into EnergyData format: [[x1,y1], [x2,y2]...]
-    // Assuming data[i][0] is x and data[i][1] is y
     const energyValues: EnergyData = [];
     Object.values(response).forEach(innerObj => {
       const keys = Object.keys(innerObj).map(Number).sort((a,b) => a-b);
       if (keys.length >= 2) {
-         // Assuming first key is x, second is y for simplicity
         energyValues.push([innerObj[keys[0].toString() as keyof typeof innerObj] as number, innerObj[keys[1].toString() as keyof typeof innerObj] as number]);
       } else if (keys.length === 1 && energyValues.length > 0) {
-        // If only one value, assume it's y and x is index
         energyValues.push([energyValues.length, innerObj[keys[0].toString() as keyof typeof innerObj] as number]);
       }
     });
-    // Sort by first element (step/time)
     return energyValues.sort((a,b) => a[0] - b[0]);
   },
 
   getServerResources: async (): Promise<ServerResource[]> => {
     const response = await fetchAPI<GetResourcesResponse>('/getResources', { method: 'GET' });
-    // Transform into ServerResource[]
     return Object.entries(response).map(([id, resData], index) => ({
       id: id, 
       name: `Server ${index + 1}`, 
       CPUavail: resData.CPUavail,
       GPUavail: resData.GPUavail,
-      TotalRam: resData.totalRAM, // Map from backend's totalRAM
+      TotalRam: resData.totalRAM,
       RAMavail: resData.RAMavail,
-      totalCPU: resData.totalCPU, // Include totalCPU
+      totalCPU: resData.totalCPU,
     }));
   },
 
@@ -127,4 +146,3 @@ export const api = {
     return response.blob();
   },
 };
-
