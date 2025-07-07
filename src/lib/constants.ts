@@ -89,3 +89,25 @@ export const INTERACTION_TYPE_OPTIONS = [
   { label: 'Umbrella Sampling', value: 7 },
   { label: 'Forward Flux', value: 8 },
 ];
+
+type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
+
+export const JOB_STATUS_CODES: { [key: number]: { type: string; description: string; variant: BadgeVariant } } = {
+  0: { type: 'Ok', description: 'Task completed successfully', variant: 'secondary' },
+  10: { type: 'Running', description: 'Job is currently running', variant: 'default' },
+  11: { type: 'Reserved', description: 'Reserved for special purpose like docker jobs, etc', variant: 'default' },
+  100: { type: 'Pending', description: 'Pending due to normal reasons or resources are full', variant: 'outline' },
+  101: { type: 'Pending Trig', description: 'This task will be started after completion of a previous job', variant: 'outline' },
+  102: { type: 'Pending Next', description: 'Task completed but has not be registered in the system', variant: 'outline' },
+  103: { type: 'Pending Resume', description: 'Queue for the resume job when resources are free', variant: 'outline' },
+  110: { type: 'Pending Full', description: 'Job needs to allocate a full resource', variant: 'outline' },
+  202: { type: 'Stopped', description: 'Stopped prematurely by user or system', variant: 'secondary' },
+  203: { type: 'Deleted', description: 'Job does not exist in storage', variant: 'secondary' },
+  600: { type: 'DB Mismatch', description: 'Database is not consistent', variant: 'destructive' },
+  601: { type: 'DB Mismatch', description: 'Extra pending entry in the database', variant: 'destructive' },
+  501: { type: 'Error', description: 'Feature requested doesn\'t exist', variant: 'destructive' },
+  502: { type: 'Error', description: 'Error in writing files', variant: 'destructive' },
+  503: { type: 'Error', description: 'Main program like oxDNA could not be executed', variant: 'destructive' },
+  505: { type: 'Error', description: 'Job stopped abruptly before completion, check log file', variant: 'destructive' },
+  506: { type: 'Error', description: 'Previous job has an error status (active > 199)', variant: 'destructive' },
+};

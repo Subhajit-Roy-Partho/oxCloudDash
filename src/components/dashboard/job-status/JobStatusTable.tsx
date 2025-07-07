@@ -5,6 +5,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
+import { JOB_STATUS_CODES } from '@/lib/constants';
 import type { JobStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,17 +23,24 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { MoreHorizontal, Play, Square, Trash2, Repeat, LineChartIcon, Download, ArrowUpDown, Filter } from 'lucide-react';
-import { saveAs } from 'file-saver'; // npm install file-saver @types/file-saver
+import { saveAs } from 'file-saver'; 
 
 type SortConfig = {
   key: keyof JobStatus | null;
   direction: 'ascending' | 'descending';
 };
+
+const getStatusDetails = (code: string | number) => {
+  const numericCode = Number(code);
+  return JOB_STATUS_CODES[numericCode] || { type: `Unknown (${code})`, description: 'No description available.', variant: 'outline' };
+};
+
 
 export default function JobStatusTable() {
   const { user } = useAuth();
@@ -119,7 +127,7 @@ export default function JobStatusTable() {
     return sortableItems.filter(job =>
       job.uuid.toLowerCase().includes(filter.toLowerCase()) ||
       (job.jobName && job.jobName.toLowerCase().includes(filter.toLowerCase())) ||
-      (typeof job.active === 'string' && job.active.toLowerCase().includes(filter.toLowerCase()))
+      (getStatusDetails(job.active).type.toLowerCase().includes(filter.toLowerCase()))
     );
   }, [jobs, filter, sortConfig]);
 
@@ -137,16 +145,6 @@ export default function JobStatusTable() {
     }
     return <ArrowUpDown className="ml-2 h-4 w-4 inline opacity-50" />;
   };
-  
-  const getJobBadgeVariant = (activeStatus: string | number): "default" | "secondary" | "destructive" | "outline" => {
-    const statusStr = String(activeStatus).toLowerCase();
-    if (statusStr === 'running' || statusStr === '1' || statusStr === 'active') return "default"; // Primary for running
-    if (statusStr === 'completed' || statusStr === 'finished') return "secondary"; // Success variant is not typical for badge, use secondary for completed
-    if (statusStr === 'failed' || statusStr === 'error') return "destructive";
-    if (statusStr === 'pending' || statusStr === 'queued') return "outline"; // Yellow like, use outline
-    return "outline"; // Default for unknown states
-  };
-
 
   if (loading) {
     return (
@@ -184,12 +182,23 @@ export default function JobStatusTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedAndFilteredJobs.length > 0 ? sortedAndFilteredJobs.map((job) => (
+            {sortedAndFilteredJobs.length > 0 ? sortedAndFilteredJobs.map((job) => {
+              const status = getStatusDetails(job.active);
+              return (
               <TableRow key={job.uuid}>
                 <TableCell className="font-medium">{job.jobName || 'N/A'}</TableCell>
                 <TableCell className="font-medium truncate max-w-xs font-code">{job.uuid}</TableCell>
                 <TableCell>
-                  <Badge variant={getJobBadgeVariant(job.active)}>{String(job.active)}</Badge>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                         <Badge variant={status.variant}>{status.type}</Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{status.description}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
@@ -244,7 +253,7 @@ export default function JobStatusTable() {
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            )) : (
+            )}) : (
               <TableRow>
                 <TableCell colSpan={7} className="h-24 text-center">
                   No jobs found.
@@ -257,6 +266,3 @@ export default function JobStatusTable() {
     </div>
   );
 }
-
-// Ensure file-saver is installed: npm install file-saver
-// and types: npm install --save-dev @types/file-saver
