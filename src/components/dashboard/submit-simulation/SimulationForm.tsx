@@ -61,7 +61,7 @@ const formSchema = z.object({
   override: z.string().optional(),
   // New schema fields
   use_average_seq: z.boolean().optional(),
-  max_backbone_force: z.coerce.number().positive({message: "Must be larger than 0"}).optional(),
+  max_backbone_force: z.coerce.number().optional(),
   seed: z.coerce.number().int().optional(),
   thermostat: z.string().optional(),
   delta_translation: z.coerce.number().optional(),
@@ -462,3 +462,5 @@ export default function SimulationForm() {
     </Form>
   );
 }
+
+    
