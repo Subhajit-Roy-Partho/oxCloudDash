@@ -29,6 +29,14 @@ export interface SimulationJobPayload {
   verletSkin: number;
   override?: string;
   use_average_seq?: boolean;
+  // New advanced/conditional params for form state
+  max_backbone_force?: number;
+  seed?: number;
+  thermostat?: string;
+  delta_translation?: number;
+  delta_rotation?: number;
+  mismatch_repulsion?: boolean;
+  mismatch_repulsion_strength?: number;
 }
 
 export interface EnhancedSamplingPayload {

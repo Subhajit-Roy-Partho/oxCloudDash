@@ -34,7 +34,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
-import { SIMULATION_PARAMETERS_DEFAULTS, INTERACTION_TYPE_OPTIONS } from '@/lib/constants';
+import { SIMULATION_PARAMETERS_DEFAULTS, INTERACTION_TYPE_OPTIONS, THERMOSTAT_OPTIONS } from '@/lib/constants';
 import type { SimulationJobPayload } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Send } from 'lucide-react';
@@ -59,7 +59,15 @@ const formSchema = z.object({
   forceFile: z.any().optional(),
   verletSkin: z.coerce.number().min(0),
   override: z.string().optional(),
+  // New schema fields
   use_average_seq: z.boolean().optional(),
+  max_backbone_force: z.coerce.number().positive({message: "Must be larger than 0"}).optional(),
+  seed: z.coerce.number().int().optional(),
+  thermostat: z.string().optional(),
+  delta_translation: z.coerce.number().optional(),
+  delta_rotation: z.coerce.number().optional(),
+  mismatch_repulsion: z.boolean().optional(),
+  mismatch_repulsion_strength: z.coerce.number().optional(),
 });
 
 export default function SimulationForm() {
@@ -72,6 +80,8 @@ export default function SimulationForm() {
   });
 
   const simulationType = form.watch('simulationType');
+  const interactionType = form.watch('interactionType');
+  const mismatchRepulsion = form.watch('mismatch_repulsion');
 
   useEffect(() => {
     if (simulationType === 'MC') {
@@ -85,20 +95,52 @@ export default function SimulationForm() {
       return;
     }
 
-    // Process override parameters
-    const avgSeqParam = `use_average_seq = ${values.use_average_seq ? 'true' : 'false'}`;
+    const overrideLines: string[] = [];
+
+    overrideLines.push(`use_average_seq = ${values.use_average_seq ? 'true' : 'false'}`);
+    
+    if (values.max_backbone_force) {
+        overrideLines.push(`max_backbone_force = ${values.max_backbone_force}`);
+    }
+    if (values.seed && values.seed !== -1) {
+        overrideLines.push(`seed = ${values.seed}`);
+    }
+    if (values.simulationType === 'MD' && values.thermostat) {
+        overrideLines.push(`thermostat = ${values.thermostat}`);
+    }
+    if (values.simulationType === 'MC') {
+        if(values.delta_translation) overrideLines.push(`delta_translation = ${values.delta_translation}`);
+        if(values.delta_rotation) overrideLines.push(`delta_rotation = ${values.delta_rotation}`);
+    }
+    if (values.interactionType === 1) { // RNA2
+        overrideLines.push(`mismatch_repulsion = ${values.mismatch_repulsion ? 'true' : 'false'}`);
+        if (values.mismatch_repulsion && values.mismatch_repulsion_strength) {
+            overrideLines.push(`mismatch_repulsion_strength = ${values.mismatch_repulsion_strength}`);
+        }
+    }
+
     let overrideParams = values.override || '';
+    const generatedOverrides = overrideLines.join('\n');
     
     overrideParams = overrideParams.trim()
-      ? `${overrideParams.trim()}\n${avgSeqParam}`
-      : avgSeqParam;
+      ? `${overrideParams.trim()}\n${generatedOverrides}`
+      : generatedOverrides;
 
-    // Create a copy of values and remove the temporary form fields that are handled separately
-    const { use_average_seq, ...apiValues } = values;
+    const { 
+        use_average_seq, 
+        max_backbone_force,
+        seed,
+        thermostat,
+        delta_translation,
+        delta_rotation,
+        mismatch_repulsion,
+        mismatch_repulsion_strength,
+        ...apiValues 
+    } = values;
 
     const payload: SimulationJobPayload = {
       ...apiValues,
-      override: overrideParams, // Use the processed override string
+      override: overrideParams,
       userID: user.id, 
       username: user.username,
       topology: values.topology,
@@ -279,6 +321,31 @@ export default function SimulationForm() {
                     </FormItem>
                   )}
                 />
+                 {interactionType === 1 && (
+                    <Card className="border-dashed p-4 space-y-4">
+                        <FormField control={form.control} name="mismatch_repulsion" render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                                <div className="space-y-0.5"><FormLabel>Mismatch Repulsion</FormLabel><FormDescription>Add repulsion between mismatches.</FormDescription></div>
+                                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                            </FormItem>
+                        )} />
+                        {mismatchRepulsion && (
+                            <FormField control={form.control} name="mismatch_repulsion_strength" render={({ field }) => (
+                                <FormItem><FormLabel>Mismatch Repulsion Strength</FormLabel><FormControl><Input type="number" step="0.1" {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                        )}
+                    </Card>
+                 )}
+                 {simulationType === 'MC' && (
+                    <Card className="border-dashed p-4 space-y-4">
+                         <FormField control={form.control} name="delta_translation" render={({ field }) => (
+                            <FormItem><FormLabel>Delta Translation</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormDescription>Maximum translational displacement.</FormDescription><FormMessage /></FormItem>
+                        )} />
+                        <FormField control={form.control} name="delta_rotation" render={({ field }) => (
+                            <FormItem><FormLabel>Delta Rotation</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormDescription>Maximum angular rotational displacement.</FormDescription><FormMessage /></FormItem>
+                        )} />
+                    </Card>
+                 )}
                  <FormField control={form.control} name="hBondRestraint" render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                     <div className="space-y-0.5">
@@ -329,6 +396,49 @@ export default function SimulationForm() {
                         <FormField control={form.control} name="verletSkin" render={({ field }) => (
                           <FormItem><FormLabel>Verlet Skin</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
+                        
+                        {simulationType === 'MD' && (
+                           <FormField
+                            control={form.control}
+                            name="thermostat"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Thermostat</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                    <SelectTrigger><SelectValue placeholder="Select a thermostat" /></SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                    {THERMOSTAT_OPTIONS.map(option => (
+                                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                                    ))}
+                                    </SelectContent>
+                                </Select>
+                                <FormDescription>Select the thermostat for MD simulations.</FormDescription>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                        )}
+
+                        <FormField control={form.control} name="max_backbone_force" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Max Backbone Force</FormLabel>
+                            <FormControl><Input type="number" step="0.1" {...field} /></FormControl>
+                            <FormDescription>Maximum force for FENE bonds. Should be > 0.</FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+
+                        <FormField control={form.control} name="seed" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Random Seed</FormLabel>
+                            <FormControl><Input type="number" {...field} /></FormControl>
+                            <FormDescription>Seed for the random number generator. (-1 for default/random).</FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+
                         <FormField control={form.control} name="override" render={({ field }) => (
                           <FormItem><FormLabel>Override Parameters (Optional)</FormLabel><FormControl><Textarea placeholder="key = value pairs, one per line" {...field} value={field.value ?? ""} /></FormControl><FormDescription>Additional parameters to override defaults.</FormDescription><FormMessage /></FormItem>
                         )} />

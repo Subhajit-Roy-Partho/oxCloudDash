@@ -55,6 +55,14 @@ export const SIMULATION_PARAMETERS_DEFAULTS = {
   verletSkin: 0.4,
   override: '',
   use_average_seq: false,
+  // New advanced/conditional params
+  max_backbone_force: 10.0,
+  seed: -1,
+  thermostat: 'John',
+  delta_translation: 0.02,
+  delta_rotation: 0.04,
+  mismatch_repulsion: false,
+  mismatch_repulsion_strength: 1.0,
 };
 
 export const ENHANCED_SAMPLING_DEFAULTS = {
@@ -84,9 +92,10 @@ export const ENHANCED_SAMPLING_DEFAULTS = {
 export const INTERACTION_TYPE_OPTIONS = [
   { label: 'DNA2', value: 0 },
   { label: 'RNA2', value: 1 },
-  { label: 'Lorenzo Patchy', value: 2 },
-  { label: 'Romano Patchy', value: 3 },
 ];
+
+export const THERMOSTAT_OPTIONS = ['John', 'no', 'refresh', 'brownian', 'langevin', 'bussi', 'DPD'];
+
 
 type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
 
