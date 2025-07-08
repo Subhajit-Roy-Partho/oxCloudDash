@@ -14,6 +14,7 @@ import type {
   GetJobStatusByUserResponse,
   GetEnergyResponse,
   GetResourcesResponse,
+  GetFileListResponse,
   JobStatus,
   ServerResource,
 } from './types';
@@ -190,4 +191,32 @@ export const api = {
     }
     return response.blob();
   },
+
+  downloadAllFiles: async (uuid: string): Promise<Blob> => {
+     const response = await fetch(
+      `${API_BASE_URL_INTERNAL}/downloadAll/${uuid}`,
+      {
+        method: 'GET',
+      }
+    );
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error(`Download All Error (${response.status}) for ${uuid}: ${errorBody}`);
+      throw new Error(
+        `Download all failed: ${response.status} ${response.statusText} - ${errorBody}`
+      );
+    }
+    return response.blob();
+  },
+
+  listJobFiles: async (uuid: string): Promise<string[]> => {
+    const response = await fetchAPI<GetFileListResponse>(`/list/${uuid}`, { method: 'GET' });
+    return Object.values(response).sort();
+  },
+
+  getJobFileContent: async (uuid: string, filename: string): Promise<string> => {
+    const blob = await api.downloadFile(uuid, filename);
+    return blob.text();
+  }
 };

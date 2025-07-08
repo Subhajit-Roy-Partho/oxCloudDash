@@ -22,13 +22,14 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { MoreHorizontal, Play, Square, Trash2, Repeat, LineChartIcon, Download, ArrowUpDown, Filter } from 'lucide-react';
+import { MoreHorizontal, Play, Square, Trash2, Repeat, LineChartIcon, Download, ArrowUpDown, Filter, FolderArchive, Files } from 'lucide-react';
 import { saveAs } from 'file-saver'; 
 
 type SortConfig = {
@@ -110,6 +111,19 @@ export default function JobStatusTable() {
       toast({ title: "Error", description: (error as Error).message || "Download failed.", variant: "destructive" });
     }
   };
+
+  const handleDownloadAll = async (uuid: string) => {
+    toast({ title: "Zipping files...", description: `Preparing all files for job ${uuid} for download. This may take a moment.` });
+    try {
+      const blob = await api.downloadAllFiles(uuid);
+      saveAs(blob, `${uuid}_files.zip`);
+      toast({ title: "Download Started", description: `Downloading all files for job ${uuid}.` });
+    } catch (error) {
+      console.error("Download all failed for job", uuid, error);
+      toast({ title: "Error", description: (error as Error).message || "Download all failed.", variant: "destructive" });
+    }
+  };
+
 
   const sortedAndFilteredJobs = useMemo(() => {
     let sortableItems = [...jobs];
@@ -221,8 +235,26 @@ export default function JobStatusTable() {
                         onSelect={() => handleRefreshJob(job.uuid)}
                         className="cursor-pointer"
                       >
-                        <Repeat className="mr-2 h-4 w-4" /> Refresh
+                        <Repeat className="mr-2 h-4 w-4" /> Refresh Status
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild className="cursor-pointer">
+                        <Link href={`/data-analysis/${job.uuid}`}>
+                          <LineChartIcon className="mr-2 h-4 w-4" /> Analyze
+                        </Link>
+                      </DropdownMenuItem>
+                       <DropdownMenuItem asChild className="cursor-pointer">
+                        <Link href={`/files/${job.uuid}`}>
+                          <Files className="mr-2 h-4 w-4" /> Show Files
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onSelect={() => handleDownloadAll(job.uuid)} className="cursor-pointer">
+                        <FolderArchive className="mr-2 h-4 w-4" /> Download All (.zip)
+                      </DropdownMenuItem>
+                       <DropdownMenuItem onSelect={() => handleDownload(job.uuid, 'trajectory.dat')} className="cursor-pointer">
+                        <Download className="mr-2 h-4 w-4" /> Download Trajectory
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onSelect={() => handleAction(() => api.resumeJob(job.uuid), `Job ${job.uuid} resumed.`, job.uuid)}
                         className="cursor-pointer"
@@ -240,14 +272,6 @@ export default function JobStatusTable() {
                         className="cursor-pointer text-destructive focus:text-destructive"
                       >
                         <Trash2 className="mr-2 h-4 w-4" /> Delete
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild className="cursor-pointer">
-                        <Link href={`/data-analysis/${job.uuid}`}>
-                          <LineChartIcon className="mr-2 h-4 w-4" /> Analyze
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => handleDownload(job.uuid)} className="cursor-pointer">
-                        <Download className="mr-2 h-4 w-4" /> Download Results
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

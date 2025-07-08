@@ -136,3 +136,5 @@ export interface GetResourcesResponse {
     totalCPU: string;
   };
 }
+
+export type GetFileListResponse = Record<string, string>;
