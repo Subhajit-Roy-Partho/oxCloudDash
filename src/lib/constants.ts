@@ -3,7 +3,7 @@ import type { NavItem } from '@/components/dashboard/SidebarNav';
 import { PlaySquare, ListChecks, Server, FlaskConical, FileUp } from 'lucide-react';
 
 export const API_BASE_URL_INTERNAL = '/api/internal'; // Updated to use the proxy
-export const API_BASE_URL_PUBLIC = process.env.NEXT_PUBLIC_API_BASE_URL_PUBLIC || 'http://localhost:8800';
+export const API_BASE_URL_PUBLIC = process.env.NEXT_PUBLIC_API_BASE_URL_PUBLIC || 'http://localhost:8888';
 
 export const NAV_ITEMS: NavItem[] = [
   {
@@ -53,7 +53,7 @@ export const SIMULATION_PARAMETERS_DEFAULTS = {
   override: '',
   use_average_seq: false,
   // New advanced/conditional params
-  max_backbone_force: 10.0,
+  max_backbone_force: 0.0,
   seed: -1,
   thermostat: 'John',
   delta_translation: 0.02,
