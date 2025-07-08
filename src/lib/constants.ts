@@ -51,13 +51,11 @@ export const SIMULATION_PARAMETERS_DEFAULTS = {
   dt: 0.003,
   interactionType: 0, // Default to DNA2
   hBondRestraint: true,
-  step1: 0.0,
-  step2: 0.0,
-  step3: 0.0,
   T: '20C',
   saltConc: 1.0,
   verletSkin: 0.4,
   override: '',
+  use_average_seq: false,
 };
 
 export const ENHANCED_SAMPLING_DEFAULTS = {
@@ -89,11 +87,6 @@ export const INTERACTION_TYPE_OPTIONS = [
   { label: 'RNA2', value: 1 },
   { label: 'Lorenzo Patchy', value: 2 },
   { label: 'Romano Patchy', value: 3 },
-  { label: 'My Patchy', value: 4 },
-  { label: 'PHB', value: 5 },
-  { label: 'PSP', value: 6 },
-  { label: 'Umbrella Sampling', value: 7 },
-  { label: 'Forward Flux', value: 8 },
 ];
 
 type BadgeVariant = "default" | "secondary" | "destructive" | "outline";

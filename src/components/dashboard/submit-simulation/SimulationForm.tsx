@@ -58,10 +58,8 @@ const formSchema = z.object({
   saltConc: z.coerce.number().min(0, "Salt concentration cannot be negative."),
   forceFile: z.any().optional(),
   verletSkin: z.coerce.number().min(0),
-  step1: z.coerce.number(),
-  step2: z.coerce.number(),
-  step3: z.coerce.number(),
   override: z.string().optional(),
+  use_average_seq: z.boolean().optional(),
 });
 
 export default function SimulationForm() {
@@ -87,8 +85,19 @@ export default function SimulationForm() {
       return;
     }
 
+    // Process override parameters
+    let overrideParams = values.override || '';
+    if (values.use_average_seq) {
+        const avgSeqParam = 'use_average_seq = true';
+        overrideParams = overrideParams ? `${overrideParams}\n${avgSeqParam}` : avgSeqParam;
+    }
+
+    // Create a copy of values and remove the temporary form fields that are handled separately
+    const { use_average_seq, ...apiValues } = values;
+
     const payload: SimulationJobPayload = {
-      ...values,
+      ...apiValues,
+      override: overrideParams, // Use the processed override string
       userID: user.id, 
       username: user.username,
       topology: values.topology,
@@ -278,6 +287,15 @@ export default function SimulationForm() {
                     <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                   </FormItem>
                 )} />
+                <FormField control={form.control} name="use_average_seq" render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Use Average Sequence Parameters</FormLabel>
+                      <FormDescription>Use average-sequence parameters. Defaults to false.</FormDescription>
+                    </div>
+                    <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                  </FormItem>
+                )} />
                 <FormField control={form.control} name="T" render={({ field }) => (
                   <FormItem><FormLabel>Temperature</FormLabel><FormControl><Input placeholder="e.g., 20C" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
@@ -309,15 +327,6 @@ export default function SimulationForm() {
                         )} />
                         <FormField control={form.control} name="verletSkin" render={({ field }) => (
                           <FormItem><FormLabel>Verlet Skin</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="step1" render={({ field }) => (
-                          <FormItem><FormLabel>Step 1</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="step2" render={({ field }) => (
-                          <FormItem><FormLabel>Step 2</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="step3" render={({ field }) => (
-                          <FormItem><FormLabel>Step 3</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                         <FormField control={form.control} name="override" render={({ field }) => (
                           <FormItem><FormLabel>Override Parameters (Optional)</FormLabel><FormControl><Textarea placeholder="key = value pairs, one per line" {...field} value={field.value ?? ""} /></FormControl><FormDescription>Additional parameters to override defaults.</FormDescription><FormMessage /></FormItem>

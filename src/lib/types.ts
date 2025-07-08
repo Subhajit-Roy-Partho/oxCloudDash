@@ -27,10 +27,8 @@ export interface SimulationJobPayload {
   saltConc: number;
   forceFile?: File; // Optional
   verletSkin: number;
-  step1: number;
-  step2: number;
-  step3: number;
   override?: string;
+  use_average_seq?: boolean;
 }
 
 export interface EnhancedSamplingPayload {
