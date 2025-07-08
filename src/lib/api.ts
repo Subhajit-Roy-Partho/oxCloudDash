@@ -172,7 +172,7 @@ export const api = {
 
   downloadFile: async (uuid: string, filename: string): Promise<Blob> => {
     const response = await fetch(
-      `${API_BASE_URL_PUBLIC}/download/${uuid}/${filename}`,
+      `${API_BASE_URL_INTERNAL}/download/${uuid}/${filename}`,
       {
         method: 'GET',
       }
