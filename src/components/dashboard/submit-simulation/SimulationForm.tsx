@@ -86,11 +86,12 @@ export default function SimulationForm() {
     }
 
     // Process override parameters
+    const avgSeqParam = `use_average_seq = ${values.use_average_seq ? 'true' : 'false'}`;
     let overrideParams = values.override || '';
-    if (values.use_average_seq) {
-        const avgSeqParam = 'use_average_seq = true';
-        overrideParams = overrideParams ? `${overrideParams}\n${avgSeqParam}` : avgSeqParam;
-    }
+    
+    overrideParams = overrideParams.trim()
+      ? `${overrideParams.trim()}\n${avgSeqParam}`
+      : avgSeqParam;
 
     // Create a copy of values and remove the temporary form fields that are handled separately
     const { use_average_seq, ...apiValues } = values;

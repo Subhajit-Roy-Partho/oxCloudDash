@@ -1,5 +1,4 @@
 
-
 import type { NavItem } from '@/components/dashboard/SidebarNav';
 import { PlaySquare, ListChecks, Server, FlaskConical, FileUp } from 'lucide-react';
 
@@ -50,7 +49,7 @@ export const SIMULATION_PARAMETERS_DEFAULTS = {
   confInterval: 100000,
   dt: 0.003,
   interactionType: 0, // Default to DNA2
-  hBondRestraint: true,
+  hBondRestraint: false,
   T: '20C',
   saltConc: 1.0,
   verletSkin: 0.4,
