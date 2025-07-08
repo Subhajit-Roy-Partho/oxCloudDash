@@ -3,7 +3,6 @@
 import {
   API_BASE_URL_INTERNAL,
   API_BASE_URL_PUBLIC,
-  DOWNLOAD_AUTH_TOKEN,
 } from './constants';
 import type {
   SimulationJobPayload,
@@ -176,9 +175,6 @@ export const api = {
       `${API_BASE_URL_PUBLIC}/download/${uuid}/${filename}`,
       {
         method: 'GET',
-        headers: {
-          Authorization: DOWNLOAD_AUTH_TOKEN,
-        },
       }
     );
 

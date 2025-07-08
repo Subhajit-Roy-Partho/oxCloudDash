@@ -5,9 +5,6 @@ import { PlaySquare, ListChecks, Server, FlaskConical, FileUp } from 'lucide-rea
 export const API_BASE_URL_INTERNAL = '/api/internal'; // Updated to use the proxy
 export const API_BASE_URL_PUBLIC = process.env.NEXT_PUBLIC_API_BASE_URL_PUBLIC || 'http://localhost:8800';
 
-// This is the placeholder token from the C++ backend for download
-export const DOWNLOAD_AUTH_TOKEN = 'your_auth_token_here';
-
 export const NAV_ITEMS: NavItem[] = [
   {
     href: '/submit-simulation',
