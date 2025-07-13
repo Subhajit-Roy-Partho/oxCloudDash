@@ -1,6 +1,6 @@
 
 import type { NavItem } from '@/components/dashboard/SidebarNav';
-import { PlaySquare, ListChecks, Server, FlaskConical, FileUp } from 'lucide-react';
+import { PlaySquare, ListChecks, Server, FlaskConical, FileUp, Info } from 'lucide-react';
 
 export const API_BASE_URL_INTERNAL = '/api/internal'; // Updated to use the proxy
 export const API_BASE_URL_PUBLIC = process.env.NEXT_PUBLIC_API_BASE_URL_PUBLIC || 'http://localhost:8888';
@@ -30,6 +30,11 @@ export const NAV_ITEMS: NavItem[] = [
     href: '/external-analysis',
     icon: FileUp,
     label: 'External Analysis',
+  },
+  {
+    href: '/about',
+    icon: Info,
+    label: 'About Us',
   }
 ];
 
