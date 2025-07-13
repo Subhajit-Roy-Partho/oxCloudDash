@@ -55,7 +55,7 @@ export const SIMULATION_PARAMETERS_DEFAULTS = {
   // New advanced/conditional params
   max_backbone_force: 0.0,
   seed: -1,
-  thermostat: 'John',
+  thermostat: 'john',
   delta_translation: 0.02,
   delta_rotation: 0.04,
   mismatch_repulsion: false,
@@ -91,7 +91,7 @@ export const INTERACTION_TYPE_OPTIONS = [
   { label: 'RNA2', value: 1 },
 ];
 
-export const THERMOSTAT_OPTIONS = ['John', 'no', 'refresh', 'brownian', 'langevin', 'bussi', 'DPD'];
+export const THERMOSTAT_OPTIONS = ['john', 'no', 'refresh', 'brownian', 'langevin', 'bussi', 'DPD'];
 
 
 type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
