@@ -1,9 +1,9 @@
 
 "use client";
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import {
@@ -38,8 +38,15 @@ import { SIMULATION_PARAMETERS_DEFAULTS, INTERACTION_TYPE_OPTIONS, THERMOSTAT_OP
 import type { SimulationJobPayload } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Send } from 'lucide-react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+
+const MANAGED_PARAMS = [
+    'T', 'simulation_type', 'backend', 'steps', 'conf_int', 'dt', 'interaction_type', 
+    'salt_concentration', 'verlet_skin', 'use_average_seq', 'max_backbone_force', 'seed', 
+    'thermostat', 'delta_translation', 'delta_rotation', 'mismatch_repulsion', 'mismatch_repulsion_strength'
+];
+
 
 const formSchema = z.object({
   jobName: z.string().optional(),
@@ -68,7 +75,28 @@ const formSchema = z.object({
   delta_rotation: z.coerce.number().optional(),
   mismatch_repulsion: z.boolean().optional(),
   mismatch_repulsion_strength: z.coerce.number().optional(),
+}).superRefine((data, ctx) => {
+    if (data.override) {
+        const lines = data.override.split('\n');
+        for (const line of lines) {
+            const trimmedLine = line.trim();
+            if (trimmedLine.startsWith('#') || trimmedLine === '') continue; // Ignore comments and empty lines
+
+            const parts = trimmedLine.split('=').map(p => p.trim());
+            const key = parts[0];
+            
+            if (MANAGED_PARAMS.includes(key)) {
+                 ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    path: ['override'],
+                    message: `Parameter "${key}" is already managed by a form field. Please remove it from Additional Parameters.`,
+                });
+                return;
+            }
+        }
+    }
 });
+
 
 export default function SimulationForm() {
   const { user } = useAuth();
@@ -82,8 +110,9 @@ export default function SimulationForm() {
   const simulationType = form.watch('simulationType');
   const interactionType = form.watch('interactionType');
   const mismatchRepulsion = form.watch('mismatch_repulsion');
+  const useGpu = form.watch('gpu');
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (simulationType === 'MC') {
       form.setValue('gpu', false);
     }
@@ -99,7 +128,7 @@ export default function SimulationForm() {
 
     overrideLines.push(`use_average_seq = ${values.use_average_seq ? 'true' : 'false'}`);
     
-    if (values.max_backbone_force) {
+    if (values.max_backbone_force && values.max_backbone_force > 0) {
         overrideLines.push(`max_backbone_force = ${values.max_backbone_force}`);
     }
     if (values.seed && values.seed !== -1) {
@@ -331,7 +360,7 @@ export default function SimulationForm() {
                         )} />
                         {mismatchRepulsion && (
                             <FormField control={form.control} name="mismatch_repulsion_strength" render={({ field }) => (
-                                <FormItem><FormLabel>Mismatch Repulsion Strength</FormLabel><FormControl><Input type="number" step="0.1" {...field} /></FormControl><FormMessage /></FormItem>
+                                <FormItem><FormLabel>Mismatch Repulsion Strength</FormLabel><FormControl><Input type="number" step="0.1" {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>
                             )} />
                         )}
                     </Card>
@@ -339,10 +368,10 @@ export default function SimulationForm() {
                  {simulationType === 'MC' && (
                     <Card className="border-dashed p-4 space-y-4">
                          <FormField control={form.control} name="delta_translation" render={({ field }) => (
-                            <FormItem><FormLabel>Delta Translation</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormDescription>Maximum translational displacement.</FormDescription><FormMessage /></FormItem>
+                            <FormItem><FormLabel>Delta Translation</FormLabel><FormControl><Input type="number" step="0.01" {...field} value={field.value ?? ""} /></FormControl><FormDescription>Maximum translational displacement.</FormDescription><FormMessage /></FormItem>
                         )} />
                         <FormField control={form.control} name="delta_rotation" render={({ field }) => (
-                            <FormItem><FormLabel>Delta Rotation</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormDescription>Maximum angular rotational displacement.</FormDescription><FormMessage /></FormItem>
+                            <FormItem><FormLabel>Delta Rotation</FormLabel><FormControl><Input type="number" step="0.01" {...field} value={field.value ?? ""} /></FormControl><FormDescription>Maximum angular rotational displacement.</FormDescription><FormMessage /></FormItem>
                         )} />
                     </Card>
                  )}
@@ -365,7 +394,12 @@ export default function SimulationForm() {
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="T" render={({ field }) => (
-                  <FormItem><FormLabel>Temperature</FormLabel><FormControl><Input placeholder="e.g., 20C" {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem>
+                    <FormLabel>Temperature</FormLabel>
+                    <FormControl><Input placeholder="e.g., 20C" {...field} /></FormControl>
+                    <FormDescription>Add C or K at the end of the number to represent it in Celsius or Kelvin respectively, otherwise it will be treated in oxDNA unit of temperature.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
                 )} />
                 <FormField control={form.control} name="saltConc" render={({ field }) => (
                   <FormItem><FormLabel>Salt Concentration (M)</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>
@@ -394,7 +428,14 @@ export default function SimulationForm() {
                           </FormItem>
                         )} />
                         <FormField control={form.control} name="verletSkin" render={({ field }) => (
-                          <FormItem><FormLabel>Verlet Skin</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>
+                          <FormItem>
+                            <FormLabel>Verlet Skin</FormLabel>
+                            <FormControl>
+                              <Input type="number" step="0.01" {...field} disabled={!useGpu} />
+                            </FormControl>
+                             <FormDescription>Only applicable when using GPU.</FormDescription>
+                            <FormMessage />
+                          </FormItem>
                         )} />
                         
                         {simulationType === 'MD' && (
@@ -424,8 +465,8 @@ export default function SimulationForm() {
                         <FormField control={form.control} name="max_backbone_force" render={({ field }) => (
                           <FormItem>
                             <FormLabel>Max Backbone Force</FormLabel>
-                            <FormControl><Input type="number" step="0.1" {...field} /></FormControl>
-                            <FormDescription>Maximum force for FENE bonds. Should be > 0.</FormDescription>
+                            <FormControl><Input type="number" step="0.1" {...field} value={field.value ?? ""} /></FormControl>
+                            <FormDescription>Maximum force for FENE bonds. Should be > 0. Leave as 0 for default.</FormDescription>
                             <FormMessage />
                           </FormItem>
                         )} />
@@ -440,7 +481,10 @@ export default function SimulationForm() {
                         )} />
 
                         <FormField control={form.control} name="override" render={({ field }) => (
-                          <FormItem><FormLabel>Override Parameters (Optional)</FormLabel><FormControl><Textarea placeholder="key = value pairs, one per line" {...field} value={field.value ?? ""} /></FormControl><FormDescription>Additional parameters to override defaults.</FormDescription><FormMessage /></FormItem>
+                          <FormItem><FormLabel>Additional Parameters (Optional)</FormLabel>
+                          <FormControl><Textarea placeholder="key = value pairs, one per line" {...field} value={field.value ?? ""} /></FormControl>
+                          <FormDescription>Additional parameters to override defaults. Do not re-enter parameters from the fields above.</FormDescription>
+                          <FormMessage /></FormItem>
                         )} />
                       </CardContent>
                     </AccordionContent>
@@ -462,5 +506,3 @@ export default function SimulationForm() {
     </Form>
   );
 }
-
-    
