@@ -1,9 +1,9 @@
 
 "use client";
 
-import React, { Suspense, useMemo, useState, useEffect, useRef } from 'react';
+import React, { Suspense, useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Sphere, Cylinder, Text, Center, Html } from '@react-three/drei';
+import { OrbitControls, Sphere, Cylinder } from '@react-three/drei';
 import * as THREE from 'three';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, RotateCcw } from 'lucide-react';
@@ -263,16 +263,12 @@ export default function TrajectoryViewer({ jobId }: { jobId: string }) {
         </Button>
       </div>
       <Canvas camera={{ position: [0, 0, 30], fov: 50 }}>
-        <Suspense fallback={
-            <Html center>
-                <div className="text-foreground">Loading 3D Scene...</div>
-            </Html>
-        }>
-            <Center>
+        <Suspense fallback={null}>
+            <group>
                 <ambientLight intensity={0.5} />
                 <pointLight position={[10, 10, 10]} intensity={1.5} />
                 <DNA frame={data.frames[currentFrameIndex]} topology={data.topology} />
-            </Center>
+            </group>
             <OrbitControls enablePan={true} enableZoom={true} enableRotate={true} />
         </Suspense>
       </Canvas>
@@ -295,5 +291,3 @@ export default function TrajectoryViewer({ jobId }: { jobId: string }) {
     </div>
   );
 }
-
-    

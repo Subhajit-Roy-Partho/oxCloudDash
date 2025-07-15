@@ -1,7 +1,7 @@
 import type { NavItem } from '@/components/dashboard/SidebarNav';
 import { PlaySquare, ListChecks, Server, FlaskConical, FileUp, Info, Orbit } from 'lucide-react';
 
-export const API_BASE_URL_INTERNAL = '/api/internal'; // Updated to use the proxy
+export const API_BASE_URL_INTERNAL = '/api/internal';
 export const API_BASE_URL_PUBLIC = process.env.NEXT_PUBLIC_API_BASE_URL_PUBLIC || 'http://localhost:8888';
 
 export const NAV_ITEMS: NavItem[] = [
@@ -19,11 +19,6 @@ export const NAV_ITEMS: NavItem[] = [
     href: '/server-status',
     icon: Server,
     label: 'Server Status',
-  },
-   {
-    href: '/viewer',
-    icon: Orbit,
-    label: '3D Viewer',
   },
   {
     href: '/enhanced-sampling',
