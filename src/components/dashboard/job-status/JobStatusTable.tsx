@@ -29,7 +29,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { MoreHorizontal, Play, Square, Trash2, Repeat, LineChartIcon, Download, ArrowUpDown, Filter, FolderArchive, Files } from 'lucide-react';
+import { MoreHorizontal, Play, Square, Trash2, Repeat, LineChartIcon, Download, ArrowUpDown, Filter, FolderArchive, Files, Orbit } from 'lucide-react';
 import { saveAs } from 'file-saver'; 
 
 type SortConfig = {
@@ -243,6 +243,11 @@ export default function JobStatusTable() {
                         </Link>
                       </DropdownMenuItem>
                        <DropdownMenuItem asChild className="cursor-pointer">
+                        <Link href={`/viewer/${job.uuid}`}>
+                          <Orbit className="mr-2 h-4 w-4" /> View Trajectory
+                        </Link>
+                      </DropdownMenuItem>
+                       <DropdownMenuItem asChild className="cursor-pointer">
                         <Link href={`/files/${job.uuid}`}>
                           <Files className="mr-2 h-4 w-4" /> Show Files
                         </Link>
@@ -290,3 +295,5 @@ export default function JobStatusTable() {
     </div>
   );
 }
+
+    
