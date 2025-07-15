@@ -1,7 +1,7 @@
 "use client";
 
 import React, { Suspense, useMemo, useState, useEffect, useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Sphere, Cylinder, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { Button } from '@/components/ui/button';
