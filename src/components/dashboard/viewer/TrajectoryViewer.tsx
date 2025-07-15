@@ -120,9 +120,10 @@ const CylinderBond: React.FC<{ start: THREE.Vector3, end: THREE.Vector3, color: 
   orientation.multiply(new THREE.Matrix4().makeRotationX(Math.PI / 2));
 
   return (
-    <Cylinder args={[radius, radius, length, 8]} position={position} rotation-from-matrix={orientation}>
+    <mesh position={position} rotation-from-matrix={orientation}>
+      <cylinderGeometry args={[radius, radius, length, 8]} />
       <meshStandardMaterial color={color} />
-    </Cylinder>
+    </mesh>
   );
 };
 
