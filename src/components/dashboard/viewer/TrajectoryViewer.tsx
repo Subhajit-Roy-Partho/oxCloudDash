@@ -114,13 +114,21 @@ const CylinderBond: React.FC<{ start: THREE.Vector3, end: THREE.Vector3, color: 
   const vec = end.clone().sub(start);
   const length = vec.length();
   const position = start.clone().add(vec.clone().multiplyScalar(0.5));
-  const orientation = new THREE.Matrix4();
-  const up = new THREE.Vector3(0, 1, 0);
-  orientation.lookAt(start, end, up);
-  orientation.multiply(new THREE.Matrix4().makeRotationX(Math.PI / 2));
+  
+  const cylinderRef = useRef<THREE.Mesh>(null!);
+
+  useEffect(() => {
+    if (cylinderRef.current) {
+        const orientation = new THREE.Matrix4();
+        const up = new THREE.Vector3(0, 1, 0);
+        orientation.lookAt(start, end, up);
+        orientation.multiply(new THREE.Matrix4().makeRotationX(Math.PI / 2));
+        cylinderRef.current.applyMatrix4(orientation);
+    }
+  }, [start, end]);
 
   return (
-    <mesh position={position} rotation-from-matrix={orientation}>
+    <mesh position={position} ref={cylinderRef}>
       <cylinderGeometry args={[radius, radius, length, 8]} />
       <meshStandardMaterial color={color} />
     </mesh>
