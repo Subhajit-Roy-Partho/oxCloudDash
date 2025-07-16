@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -24,6 +24,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
@@ -81,6 +91,8 @@ export default function AnalysisForm({ jobId }: AnalysisFormProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const isExternal = !jobId;
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [isCheckingFiles, setIsCheckingFiles] = useState(false);
 
   const formSchema = useMemo(() => createFormSchema(isExternal), [isExternal]);
 
@@ -103,15 +115,10 @@ export default function AnalysisForm({ jobId }: AnalysisFormProps) {
     form.setValue(fieldName, file || null, { shouldValidate: true });
   };
 
-
-  async function onSubmit(values: FormValues) {
-    if (!user) {
-      toast({ title: "Authentication Error", description: "You must be logged in.", variant: "destructive" });
+  const proceedWithSubmission = async (values: FormValues) => {
+     if (!user || !selectedAnalysis) {
+      // This should not happen if called from handleFormSubmit
       return;
-    }
-    if (!selectedAnalysis) {
-        toast({ title: "Validation Error", description: "You must select an analysis type.", variant: "destructive" });
-        return;
     }
 
     const payload: AnalysisJobPayload = {
@@ -156,9 +163,57 @@ export default function AnalysisForm({ jobId }: AnalysisFormProps) {
     }
   }
   
+  const handleFormSubmit = async (values: FormValues) => {
+    if (isExternal || !jobId || !selectedAnalysis?.outputFile) {
+      // If it's an external analysis, there's no job folder to check.
+      // Or if the selected analysis doesn't produce a standard output file.
+      await proceedWithSubmission(values);
+      return;
+    }
+    
+    setIsCheckingFiles(true);
+    try {
+      const existingFiles = await api.listJobFiles(jobId);
+      const outputFileExists = existingFiles.includes(selectedAnalysis.outputFile);
+      
+      if (outputFileExists) {
+        setIsConfirming(true); // Show confirmation dialog
+      } else {
+        await proceedWithSubmission(values); // No conflict, submit directly
+      }
+    } catch (error) {
+       toast({
+        title: "Could not check for existing files.",
+        description: "Proceeding with submission...",
+        variant: "default",
+      });
+       await proceedWithSubmission(values); // Proceed even if file check fails
+    } finally {
+        setIsCheckingFiles(false);
+    }
+  };
+  
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+       <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>File Already Exists</AlertDialogTitle>
+            <AlertDialogDescription>
+              The output file <code className="bg-muted px-1 py-0.5 rounded font-semibold">{selectedAnalysis?.outputFile}</code> already exists for this job.
+              Running this analysis again may overwrite it. Are you sure you want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => proceedWithSubmission(form.getValues())}>
+              Yes, Submit Anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="analysisType"
@@ -251,9 +306,9 @@ export default function AnalysisForm({ jobId }: AnalysisFormProps) {
         <Separator />
         
         <div className="flex justify-end">
-          <Button type="submit" size="lg" disabled={!selectedAnalysis || form.formState.isSubmitting}>
+          <Button type="submit" size="lg" disabled={!selectedAnalysis || form.formState.isSubmitting || isCheckingFiles}>
             <Send className="mr-2 h-5 w-5" />
-            {form.formState.isSubmitting ? 'Submitting...' : 'Submit Analysis'}
+            {form.formState.isSubmitting || isCheckingFiles ? 'Submitting...' : 'Submit Analysis'}
           </Button>
         </div>
       </form>
