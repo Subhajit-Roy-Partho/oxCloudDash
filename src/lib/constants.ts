@@ -98,10 +98,10 @@ export const INTERACTION_TYPE_OPTIONS = [
 export const THERMOSTAT_OPTIONS = ['john', 'no', 'refresh', 'brownian', 'langevin', 'bussi', 'DPD'];
 
 
-type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
+type BadgeVariant = "default" | "secondary" | "destructive" | "outline" | "success";
 
 export const JOB_STATUS_CODES: { [key: number]: { type: string; description: string; variant: BadgeVariant } } = {
-  0: { type: 'Ok', description: 'Task completed successfully', variant: 'secondary' },
+  0: { type: 'Done', description: 'Task completed successfully', variant: 'success' },
   10: { type: 'Running', description: 'Job is currently running', variant: 'default' },
   11: { type: 'Reserved', description: 'Reserved for special purpose like docker jobs, etc', variant: 'default' },
   100: { type: 'Pending', description: 'Pending due to normal reasons or resources are full', variant: 'outline' },
