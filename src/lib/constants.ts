@@ -150,7 +150,7 @@ export type AnalysisOption = {
 export const ANALYSIS_OPTIONS: AnalysisOption[] = [
     {
         value: 0, command: "align", label: "Align", description: "Aligns each frame in a trajectory to the first frame.",
-        files: [{ name: "configuration", label: "Trajectory/Configuration File", description: "The main trajectory file.", required: true }, { name: "otherFile1", label: "Reference Configuration", description: "The reference frame to align to.", required: true }],
+        files: [{ name: "configuration", label: "Trajectory/Configuration File", description: "The main trajectory file.", required: true }, { name: "otherFile1", label: "Reference Configuration", description: "The reference frame to align to.", required: false }],
         params: [{ name: "index", backendName: "str1", type: "textarea", label: "Index", description: "Index of particles to use for alignment." }],
         outputFile: "aligned.dat",
     },
@@ -216,7 +216,7 @@ export const ANALYSIS_OPTIONS: AnalysisOption[] = [
         value: 9, command: "deviations", label: "Deviations", description: "Compute the RMSD of each nucleotide from the mean structure produced by compute_mean.py.",
         files: [
             { name: "configuration", label: "Trajectory/Configuration File", description: "The main trajectory file.", required: true },
-            { name: "otherFile1", label: "Reference File", description: "Mean structure reference file.", required: true }
+            { name: "otherFile1", label: "Reference File", description: "Mean structure reference file.", required: false }
         ],
         params: [{ name: "index", backendName: "str1", type: "textarea", label: "Index" }],
         outputFile: "rmsf.dat",
@@ -225,7 +225,7 @@ export const ANALYSIS_OPTIONS: AnalysisOption[] = [
         value: 10, command: "distance", label: "Distance", description: "Finds the ensemble of distances between any two particles in the system.",
         files: [
             { name: "configuration", label: "Trajectory/Configuration File", description: "The main trajectory file.", required: true },
-            { name: "otherFile1", label: "Reference File", description: "Reference configuration file.", required: true }
+            { name: "otherFile1", label: "Reference File", description: "Reference configuration file.", required: false }
         ],
         params: [
             { name: "index1", backendName: "str1", type: "textarea", label: "Index 1" },
@@ -326,12 +326,12 @@ export const ANALYSIS_OPTIONS: AnalysisOption[] = [
         params: [{ name: "segment_length", backendName: "int1", type: "number", label: "Segment Length" }],
         outputFile: "persistence.dat",
     },
-    {
-        value: 26, command: "plot_energy", label: "Plot Energy", description: "Plot oxDNA energy files.",
-        files: [{ name: "otherFile1", label: "Energy File", required: true, description: "Input energy.dat file." }],
-        params: [{ name: "column", backendName: "int1", type: "number", label: "Column" }],
-        outputFile: "energy.png",
-    },
+    // {
+    //     value: 26, command: "plot_energy", label: "Plot Energy", description: "Plot oxDNA energy files.",
+    //     files: [{ name: "otherFile1", label: "Energy File", required: true, description: "Input energy.dat file." }],
+    //     params: [{ name: "column", backendName: "int1", type: "number", label: "Column" }],
+    //     outputFile: "energy.png",
+    // },
     {
         value: 27, command: "pca", label: "PCA", description: "Calculates a principal component analysis of nucleotide deviations over a trajectory.",
         files: [{ name: "configuration", label: "Trajectory/Configuration File", required: true, description: "" }],
@@ -351,9 +351,9 @@ export const ANALYSIS_OPTIONS: AnalysisOption[] = [
         value: 29, command: "superimpose", label: "Superimpose", description: "Superimposes one or more structures sharing a topology to a reference structure.",
         files: [
             { name: "configuration", label: "Trajectory/Configuration File", required: true, description: "" },
-            { name: "otherFile1", label: "Reference File", required: true, description: "" }
+            { name: "otherFile1", label: "Reference File", required: false, description: "" }
         ],
         params: [{ name: "index", backendName: "str1", type: "textarea", label: "Index" }],
         outputFile: "superimposed.dat",
     },
-];
+].filter(option => option.value !== 26);
