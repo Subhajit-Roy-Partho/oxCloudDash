@@ -41,7 +41,6 @@ export interface SimulationJobPayload {
 
 export interface EnhancedSamplingPayload {
   userID: string;
-  username: string;
   jobName?: string;
   samplingType: 'Umbrella' | 'ForwardFlux';
   topology: File;
@@ -53,7 +52,7 @@ export interface EnhancedSamplingPayload {
   xmax: number;
   steps: number; // production steps
   smallSystem: boolean;
-  T: string;
+  T: number;
   saltConc: number;
   nWindows: number;
   stiff: number;

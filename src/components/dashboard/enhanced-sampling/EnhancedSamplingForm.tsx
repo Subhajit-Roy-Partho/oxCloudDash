@@ -79,10 +79,16 @@ export default function EnhancedSamplingForm() {
       return;
     }
 
+    const tempValue = parseInt(values.T, 10);
+    if (isNaN(tempValue)) {
+        toast({ title: "Invalid Temperature", description: "Please enter a valid number for temperature.", variant: "destructive"});
+        return;
+    }
+
     const payload: EnhancedSamplingPayload = {
       ...values,
       userID: user.id,
-      username: user.username,
+      T: tempValue,
       protein: !!values.proteinFile, // Set boolean based on file presence
       topology: values.topology,
       configuration: values.configuration,

@@ -84,10 +84,12 @@ export const api = {
     // Convert payload to FormData
     (Object.keys(payload) as Array<keyof EnhancedSamplingPayload>).forEach((key) => {
       const value = payload[key];
-      // Skip the samplingType as the backend doesn't seem to use it directly
       if (key === 'samplingType') return;
       
-      if (value instanceof File) {
+      if (key === 'proteinFile' && value instanceof File) {
+        // The backend endpoint expects the file under the key "protein"
+        formData.append('protein', value, value.name);
+      } else if (value instanceof File) {
         formData.append(key, value, value.name);
       } else if (value !== undefined && value !== null) {
         formData.append(key, String(value));
