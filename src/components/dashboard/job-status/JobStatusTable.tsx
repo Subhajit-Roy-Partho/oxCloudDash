@@ -241,12 +241,12 @@ export default function JobStatusTable() {
                         <Repeat className="mr-2 h-4 w-4" /> Refresh Status
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild className="cursor-pointer" disabled={isServerJob}>
-                        <Link href={`/data-analysis/${job.uuid}`}>
+                        <Link href={`/data-analysis?jobId=${job.uuid}`}>
                           <LineChartIcon className="mr-2 h-4 w-4" /> Analyze
                         </Link>
                       </DropdownMenuItem>
                        <DropdownMenuItem asChild className="cursor-pointer" disabled={isServerJob}>
-                        <Link href={`/files/${job.uuid}`}>
+                        <Link href={`/files?jobId=${job.uuid}`}>
                           <Files className="mr-2 h-4 w-4" /> Show Files
                         </Link>
                       </DropdownMenuItem>
