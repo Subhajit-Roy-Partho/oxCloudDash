@@ -15,6 +15,21 @@ export default function DataAnalysisPage() {
   const searchParams = useSearchParams();
   const jobId = searchParams.get('jobId');
 
+  if (!jobId) {
+     return (
+        <div className="space-y-6 text-center">
+            <h1 className="text-2xl font-bold tracking-tight font-headline mt-8">Job Not Specified</h1>
+            <p className="text-muted-foreground">Please return to the Job Status page and select a job to view its data.</p>
+             <Button variant="outline" asChild>
+                <Link href="/job-status">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Job Status
+                </Link>
+            </Button>
+        </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
