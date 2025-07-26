@@ -56,8 +56,8 @@ export interface EnhancedSamplingPayload {
   saltConc: number;
   nWindows: number;
   stiff: number;
-  protein: boolean;
-  proteinFile?: File;
+  // protein: boolean;
+  protein?: File;
   sequenceDependent: boolean;
   pullingSteps: number;
   eqSteps: number;

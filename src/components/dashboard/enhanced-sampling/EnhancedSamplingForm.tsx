@@ -49,7 +49,7 @@ const formSchema = z.object({
   saltConc: z.coerce.number(),
   nWindows: z.coerce.number().int().positive("Must be a positive number"),
   stiff: z.coerce.number(),
-  proteinFile: z.any().optional(),
+  protein: z.any().optional(),
   sequenceDependent: z.boolean(),
   pullingSteps: z.coerce.number().int().positive("Must be a positive number"),
   eqSteps: z.coerce.number().int().positive("Must be a positive number"),
@@ -89,10 +89,10 @@ export default function EnhancedSamplingForm() {
       ...values,
       userID: user.id,
       T: tempValue,
-      protein: !!values.proteinFile, // Set boolean based on file presence
+      // protein: !!values.proteinFile, // Set boolean based on file presence
       topology: values.topology,
       configuration: values.configuration,
-      proteinFile: values.proteinFile instanceof File ? values.proteinFile : undefined,
+      protein: values.protein instanceof File ? values.protein : undefined,
       forceFile: values.forceFile instanceof File ? values.forceFile : undefined,
     };
     
@@ -244,10 +244,10 @@ export default function EnhancedSamplingForm() {
                           <FormItem><FormLabel>Equilibrium Steps</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormDescription>Equilibration phase steps.</FormDescription><FormMessage /></FormItem>
                         )} />
 
-                        <FormField control={form.control} name="proteinFile" render={() => (
+                        <FormField control={form.control} name="protein" render={() => (
                           <FormItem>
                             <FormLabel>Protein Present File (Optional)</FormLabel>
-                            <FormControl><Input type="file" onChange={(e) => handleFileChange(e, 'proteinFile')} /></FormControl>
+                            <FormControl><Input type="file" onChange={(e) => handleFileChange(e, 'protein')} /></FormControl>
                             <FormDescription>A protein .par file if your system contains a protein.</FormDescription>
                             <FormMessage />
                           </FormItem>
