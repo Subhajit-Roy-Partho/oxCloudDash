@@ -3,6 +3,7 @@
 import {
   API_BASE_URL_INTERNAL,
   API_BASE_URL_PUBLIC,
+  API_BASE_URL_PUBLIC_AUTH,
 } from './constants';
 import type {
   SimulationJobPayload,
@@ -16,6 +17,7 @@ import type {
   GetFileListResponse,
   JobStatus,
   ServerResource,
+  User,
 } from './types';
 
 async function fetchAPI<T>(
@@ -36,7 +38,7 @@ async function fetchAPI<T>(
     console.error(`API Error (${response.status}) on ${url}: ${errorBody}`);
     throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorBody}`);
   }
-  
+
   const contentType = response.headers.get('content-type');
   if (contentType && contentType.includes('application/json')) {
     return response.json() as Promise<T>;
@@ -63,18 +65,18 @@ export const api = {
         formData.append(key, String(value));
       }
     });
-    
+
     // The browser will set the 'Content-Type: multipart/form-data' header automatically
     return fetch(`${API_BASE_URL_INTERNAL}/startJobMultipart`, {
       method: 'POST',
       body: formData,
     }).then(async (response) => {
-        if (!response.ok) {
-            const errorBody = await response.text();
-            console.error(`API Error (${response.status}) on /startJobMultipart: ${errorBody}`);
-            throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorBody}`);
-        }
-        return response.text() as unknown as Promise<StartJobResponse>;
+      if (!response.ok) {
+        const errorBody = await response.text();
+        console.error(`API Error (${response.status}) on /startJobMultipart: ${errorBody}`);
+        throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorBody}`);
+      }
+      return response.text() as unknown as Promise<StartJobResponse>;
     });
   },
 
@@ -85,7 +87,7 @@ export const api = {
     (Object.keys(payload) as Array<keyof EnhancedSamplingPayload>).forEach((key) => {
       const value = payload[key];
       if (key === 'samplingType') return;
-      
+
       if (key === 'proteinFile' && value instanceof File) {
         // The backend endpoint expects the file under the key "protein"
         formData.append('protein', value, value.name);
@@ -100,36 +102,36 @@ export const api = {
       method: 'POST',
       body: formData,
     }).then(async (response) => {
-        if (!response.ok) {
-            const errorBody = await response.text();
-            console.error(`API Error (${response.status}) on /runOxdnaUmbrella: ${errorBody}`);
-            throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorBody}`);
-        }
-        return response.text() as unknown as Promise<StartJobResponse>;
+      if (!response.ok) {
+        const errorBody = await response.text();
+        console.error(`API Error (${response.status}) on /runOxdnaUmbrella: ${errorBody}`);
+        throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorBody}`);
+      }
+      return response.text() as unknown as Promise<StartJobResponse>;
     });
   },
-  
+
   startAnalysisJob: (payload: AnalysisJobPayload): Promise<StartJobResponse> => {
     const formData = new FormData();
-     (Object.keys(payload) as Array<keyof AnalysisJobPayload>).forEach((key) => {
+    (Object.keys(payload) as Array<keyof AnalysisJobPayload>).forEach((key) => {
       const value = payload[key];
-       if (value instanceof File) {
+      if (value instanceof File) {
         formData.append(key, value, value.name);
       } else if (value !== undefined && value !== null) {
         formData.append(key, String(value));
       }
-     });
-    
-     return fetch(`${API_BASE_URL_INTERNAL}/startAnalysisMultipart`, {
+    });
+
+    return fetch(`${API_BASE_URL_INTERNAL}/startAnalysisMultipart`, {
       method: 'POST',
       body: formData,
     }).then(async (response) => {
-        if (!response.ok) {
-            const errorBody = await response.text();
-            console.error(`API Error (${response.status}) on /startAnalysisMultipart: ${errorBody}`);
-            throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorBody}`);
-        }
-        return response.text() as unknown as Promise<StartJobResponse>;
+      if (!response.ok) {
+        const errorBody = await response.text();
+        console.error(`API Error (${response.status}) on /startAnalysisMultipart: ${errorBody}`);
+        throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorBody}`);
+      }
+      return response.text() as unknown as Promise<StartJobResponse>;
     });
   },
 
@@ -154,7 +156,7 @@ export const api = {
     // Transform the object response into an array
     return Object.values(response);
   },
-  
+
   getEnergyData: async (uuid: string): Promise<GetEnergyResponse> => {
     return fetchAPI<GetEnergyResponse>(`/energy/${uuid}/0/3`, { method: 'GET' });
   },
@@ -162,8 +164,8 @@ export const api = {
   getServerResources: async (): Promise<ServerResource[]> => {
     const response = await fetchAPI<GetResourcesResponse>('/getResources', { method: 'GET' });
     return Object.entries(response).map(([id, resData], index) => ({
-      id: id, 
-      name: `Server ${index + 1}`, 
+      id: id,
+      name: `Server ${index + 1}`,
       CPUavail: resData.CPUavail,
       GPUavail: resData.GPUavail,
       TotalRam: resData.totalRAM,
@@ -191,7 +193,7 @@ export const api = {
   },
 
   downloadAllFiles: async (uuid: string): Promise<Blob> => {
-     const response = await fetch(
+    const response = await fetch(
       `${API_BASE_URL_INTERNAL}/downloadAll/${uuid}`,
       {
         method: 'GET',
@@ -216,5 +218,36 @@ export const api = {
   getJobFileContent: async (uuid: string, filename: string): Promise<string> => {
     const blob = await api.downloadFile(uuid, filename);
     return blob.text();
-  }
+  },
+
+  registerUser: async (details: { firstName: string; lastName: string; email: string; instituteName: string; passwordLogin: string }): Promise<string> => {
+    return fetchAPI<string>('/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify({
+        firstName: details.firstName,
+        lastName: details.lastName,
+        email: details.email,
+        institutionName: details.instituteName,
+        password: details.passwordLogin,
+      }),
+    }, API_BASE_URL_PUBLIC_AUTH);
+  },
+
+  loginUser: async (email: string, passwordLogin: string): Promise<{ token: string }> => {
+    return fetchAPI<{ token: string }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password: passwordLogin }),
+    }, API_BASE_URL_PUBLIC_AUTH);
+  },
+
+  getUserProfile: async (): Promise<User> => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No authentication token found.');
+    }
+    return fetchAPI<User>('/auth/profile', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+    }, API_BASE_URL_PUBLIC_AUTH);
+  },
 };

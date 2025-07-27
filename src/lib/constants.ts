@@ -1,8 +1,12 @@
 import type { NavItem } from '@/components/dashboard/SidebarNav';
 import { PlaySquare, ListChecks, Server, FlaskConical, FileUp, Info, Orbit } from 'lucide-react';
 
-export const API_BASE_URL_INTERNAL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8888';
-export const API_BASE_URL_PUBLIC = process.env.NEXT_PUBLIC_API_BASE_URL_PUBLIC || 'http://localhost:8888';
+export const API_BASE_URL_INTERNAL_AUTH = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3002/api/v1';
+export const API_BASE_URL_PUBLIC_AUTH = process.env.NEXT_PUBLIC_API_BASE_URL_PUBLIC || 'http://localhost:3002/api/v1';
+
+export const API_BASE_URL_INTERNAL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3002/api/v1';
+export const API_BASE_URL_PUBLIC = process.env.NEXT_PUBLIC_API_BASE_URL_PUBLIC || 'http://localhost:3002/api/v1';
+
 
 export const NAV_ITEMS: NavItem[] = [
   {

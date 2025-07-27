@@ -1,8 +1,9 @@
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   output: 'export',
-  /* config options here */
+  basePath: '/dist/dash',
+  distDir: "../dist/dash",
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -19,7 +20,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  
+
 };
 
 export default nextConfig;

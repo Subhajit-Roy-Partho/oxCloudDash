@@ -21,9 +21,10 @@ import Link from 'next/link';
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  name: z.string().min(1, { message: 'Name is required.' }).max(100),
-  username: z.string().min(3, { message: 'Username must be at least 3 characters.' }).max(50),
-  instituteName: z.string().min(1, { message: 'Name of the Institute is required.' }).max(100),
+  firstName: z.string().min(1, { message: 'First name is required.' }),
+  lastName: z.string().min(1, { message: 'Last name is required.' }),
+  email: z.string().email({ message: 'Please enter a valid email.' }),
+  instituteName: z.string().min(1, { message: 'Institute name is required.' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
   confirmPassword: z.string(),
 })
@@ -39,8 +40,9 @@ export default function RegisterForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      username: '',
+      firstName: '',
+      lastName: '',
+      email: '',
       instituteName: '',
       password: '',
       confirmPassword: '',
@@ -49,8 +51,9 @@ export default function RegisterForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const success = await register({
-      name: values.name,
-      username: values.username,
+      firstName: values.firstName,
+      lastName: values.lastName,
+      email: values.email,
       instituteName: values.instituteName,
       passwordLogin: values.password,
     });
@@ -58,15 +61,15 @@ export default function RegisterForm() {
     if (success) {
       toast({
         title: "Registration Successful",
-        description: `Welcome, ${values.name}! Your account has been created.`,
+        description: `Welcome, ${values.firstName}! Your account has been created.`,
       });
     } else {
       toast({
         title: "Registration Failed",
-        description: "This username might already be taken or another error occurred.",
+        description: "This email might already be taken or another error occurred.",
         variant: "destructive",
       });
-      form.setError("username", {type: "manual", message: "Username may already be taken."})
+      form.setError("email", {type: "manual", message: "Email may already be taken."})
     }
   }
 
@@ -82,27 +85,42 @@ export default function RegisterForm() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your first name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your last name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
-              name="name"
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Full Name</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your full name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Choose a username" {...field} />
+                    <Input placeholder="Enter your email" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -113,7 +131,7 @@ export default function RegisterForm() {
               name="instituteName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name of the Institute</FormLabel>
+                  <FormLabel>Institute Name</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter your institute's name" {...field} />
                   </FormControl>

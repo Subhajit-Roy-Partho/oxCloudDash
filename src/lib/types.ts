@@ -1,11 +1,11 @@
 
 
 export interface User {
-  id: string; // Will store the username for mock purposes
-  username: string;
-  name: string;
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
   instituteName: string;
-  password?: string; // Only for mock localStorage, DO NOT use like this in production
 }
 
 export interface SimulationJobPayload {

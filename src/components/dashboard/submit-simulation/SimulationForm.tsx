@@ -466,7 +466,7 @@ export default function SimulationForm() {
                           <FormItem>
                             <FormLabel>Max Backbone Force</FormLabel>
                             <FormControl><Input type="number" step="0.1" {...field} value={field.value ?? ""} /></FormControl>
-                            <FormDescription>Maximum force for FENE bonds. Should be > 0. Leave as 0 for default.</FormDescription>
+                            <FormDescription>Maximum force for FENE bonds. Should be &gt 0. Leave as 0 for default.</FormDescription>
                             <FormMessage />
                           </FormItem>
                         )} />
